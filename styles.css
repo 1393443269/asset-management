@@ -107,8 +107,8 @@ tr:hover td{background:rgba(64,158,255,0.04)}
 @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:1200px){.card-group{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}}
 /* Big Screen Display */
-.bigscreen-page{position:fixed;inset:0;z-index:1000;background:#0a0e14;display:none;flex-direction:column;overflow:hidden}
-.bigscreen-page.active{display:flex}
+.bigscreen-page{position:fixed;inset:0;z-index:9999;background:#0a0e14;display:none!important;flex-direction:column;overflow:hidden}
+.bigscreen-page.active{display:flex!important}
 .bs-top{height:56px;background:linear-gradient(90deg,#0d1117,#161b22,#0d1117);border-bottom:1px solid #1e2a3a;display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
 .bs-title{font-size:22px;font-weight:700;color:#e0e6ed;letter-spacing:2px;background:linear-gradient(90deg,#409EFF,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .bs-datetime{font-size:14px;color:#6b7d8e}

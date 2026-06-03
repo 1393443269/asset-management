@@ -20,9 +20,9 @@ const defaultData = {
   customers: [],
   alerts: [],
   activities: [
-    { id:'act1', action:'设备连接', detail:'EC800M-CN 设备已连接 broker.emqx.io:1883 Status:+QMTOPEN:0,0 +QMTCONN:0,0,0', time:'2026-06-03 14:30' },
+    { id:'act1', action:'MQTT连接', detail:'EC800M-CN MQTT已连接 broker.emqx.io:1883 Status:+QMTOPEN:0,0 +QMTCONN:0,0,0', time:'2026-06-03 14:30' },
     { id:'act2', action:'设备上线', detail:'EC800M-CN (IMEI:869598078703629) 通过COM3上线，信号CSQ=29，运营商:中国移动', time:'2026-06-03 14:31' },
-    { id:'act3', action:'数据上报', detail:'设备数据已发布 devices/ec800m-sz001/status + telemetry QoS:1 Broker:broker.emqx.io', time:'2026-06-03 14:32' }
+    { id:'act3', action:'MQTT发布', detail:'设备数据已发布 devices/ec800m-sz001/status + telemetry QoS:1 Broker:broker.emqx.io', time:'2026-06-03 14:32' }
   ],
   commandHistory: [
     { id:'ch1', time:'2026-06-03 14:30', device:'EC800M-CN 通信模组', mqttTopic:'ec800m-sz001', command:'AT', result:'成功', response:'AT OK' },
@@ -243,7 +243,7 @@ function renderDashboard() {
     { label: '资产总数', num: total, change: '共 ' + total + ' 台设备', cls: 'info' },
     { label: '在线设备', num: online, change: '↑ ' + (total ? Math.round(online/total*100) : 0) + '% 在线率', cls: 'up' },
     { label: '离线设备', num: offline, change: '↓ ' + offline + ' 台需关注', cls: 'down' },
-    { label: '设备标识设备', num: comDevices, change: '共 ' + comDevices + ' 台IoT设备', cls: 'info' }
+    { label: 'MQTT主题设备', num: comDevices, change: '共 ' + comDevices + ' 台IoT设备', cls: 'info' }
   ].map(function(c) {
     return '<div class="card"><div class="label">' + c.label + '</div><div class="num">' + c.num + '</div><div class="change ' + c.cls + '">' + c.change + '</div></div>';
   }).join('');
@@ -326,28 +326,23 @@ function renderDashboard() {
 function renderDashMap() {
   setTimeout(function() {
     var mapEl = document.getElementById('dashMap');
-    if (!mapEl || mapEl._leaflet_id) return;
-    var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
-    var centerLat = 35.86, centerLng = 104.19, zoom = 5;
-    if (assetsWithPos.length === 1) {
-      centerLat = parseFloat(assetsWithPos[0].lat);
-      centerLng = parseFloat(assetsWithPos[0].lng);
-      zoom = 13;
-    }
-    var m = L.map('dashMap').setView([centerLat, centerLng], zoom);
+    if (!mapEl) return;
+    if (maps['dash']) { maps['dash'].remove(); delete maps['dash']; }
+    var m = L.map('dashMap').setView([35.86, 104.19], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OSM', maxZoom: 18
     }).addTo(m);
-    assetsWithPos.forEach(function(a) {
-      var color = a.status === '在线' ? '#4ade80' : a.status === '维修中' ? '#f59e0b' : '#ef4444';
-      var marker = L.marker([parseFloat(a.lat), parseFloat(a.lng)], {
-        icon: L.divIcon({className: 'device-marker', html: '<div style="background:'+color+';width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>', iconSize:[14,14], iconAnchor:[7,7]})
-      }).addTo(m).bindPopup('<b>' + escapeHtml(a.name) + '</b><br>状态: ' + a.status + '<br>位置: ' + escapeHtml(a.location));
-      L.circle([parseFloat(a.lat), parseFloat(a.lng)], {radius: 800, color: color, fillColor: color, fillOpacity: 0.1, weight: 1}).addTo(m);
+    data.assets.forEach(function(a) {
+      if (a.lat && a.lng) {
+        var color = a.status === '在线' ? '#4ade80' : a.status === '维修中' ? '#f59e0b' : '#ef4444';
+        L.circleMarker([parseFloat(a.lat), parseFloat(a.lng)], {
+          radius: 7, fillColor: color, color: '#fff', weight: 1.5, fillOpacity: 0.9
+        }).addTo(m).bindPopup('<b>' + escapeHtml(a.name) + '</b><br>状态: ' + a.status + '<br>位置: ' + escapeHtml(a.location));
+      }
     });
     maps['dash'] = m;
-    setTimeout(function() { m.invalidateSize(); }, 200);
-  }, 500);
+    setTimeout(function() { m.invalidateSize(); }, 100);
+  }, 300);
 }
 
 // ============================================================
@@ -368,7 +363,7 @@ function renderAssetTable() {
   var tbody = document.querySelector('#assetTable tbody');
   if (!tbody) return;
   var html = filtered.map(function(a) {
-    var mqttTopicHtml = a.mqttTopic ? '<span class="device-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '<span style="color:#556677">-</span>';
+    var mqttTopicHtml = a.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '<span style="color:#556677">-</span>';
     return '<tr>' +
       '<td><strong>' + escapeHtml(a.name) + '</strong></td>' +
       '<td>' + escapeHtml(a.model) + '</td>' +
@@ -500,15 +495,15 @@ function batchDeleteAssets() {
 function testMqttDevice(id) {
   var a = data.assets.find(function(x) { return x.id === id; });
   if (!a || !a.mqttTopic) { showToast('该设备没有配置MQTT主题', 'error'); return; }
-  showToast('正在测试 ' + a.mqttTopic + ' 设备通讯...', 'info');
+  showToast('正在测试 ' + a.mqttTopic + ' MQTT通讯...', 'info');
   setTimeout(function() {
     var success = Math.random() > 0.3;
     if (success) {
-      showToast(a.mqttTopic + ' 设备通讯正常，响应: OK', 'success');
-      addActivity('设备检测', a.name + ' ' + a.mqttTopic + ' 设备测试通过');
+      showToast(a.mqttTopic + ' MQTT通讯正常，响应: OK', 'success');
+      addActivity('MQTT检测', a.name + ' ' + a.mqttTopic + ' MQTT测试通过');
     } else {
-      showToast(a.mqttTopic + ' 设备通讯失败，请检查连接', 'error');
-      addActivity('设备检测', a.name + ' ' + a.mqttTopic + ' 设备测试失败');
+      showToast(a.mqttTopic + ' MQTT通讯失败，请检查连接', 'error');
+      addActivity('MQTT检测', a.name + ' ' + a.mqttTopic + ' MQTT测试失败');
     }
     saveData();
   }, 1200);
@@ -528,9 +523,9 @@ function checkMqttDevices() {
       results.push({ port: p, available: available });
     });
     var found = results.filter(function(r) { return r.available; });
-    var msg = 'IoT设备发现：找到 ' + found.length + ' 个在线设备 (' + found.map(function(r) { return r.topic; }).join(', ') + ')';
+    var msg = 'MQTT设备发现：找到 ' + found.length + ' 个在线设备 (' + found.map(function(r) { return r.topic; }).join(', ') + ')';
     showToast(msg, 'success');
-    addActivity('设备检测', msg);
+    addActivity('MQTT检测', msg);
 
     // If on commands page, update com port input
     var cmdTopic = document.getElementById('cmdTopic');
@@ -867,22 +862,16 @@ function renderMonitor() {
 function renderMonitorMap() {
   setTimeout(function() {
     var mapEl = document.getElementById('map');
-    if (!mapEl || mapEl._leaflet_id) return;
-    var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
-    var centerLat = 35.86, centerLng = 104.19, zoom = 5;
-    if (assetsWithPos.length === 1) {
-      centerLat = parseFloat(assetsWithPos[0].lat);
-      centerLng = parseFloat(assetsWithPos[0].lng);
-      zoom = 13;
-    }
-    var m = L.map('map').setView([centerLat, centerLng], zoom);
+    if (!mapEl) return;
+    if (maps['main']) { maps['main'].remove(); delete maps['main']; }
+    var m = L.map('map').setView([35.86, 104.19], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OSM', maxZoom: 18
     }).addTo(m);
     updateMonitorMarkers(m);
     maps['main'] = m;
-    setTimeout(function() { m.invalidateSize(); }, 200);
-  }, 500);
+    setTimeout(function() { m.invalidateSize(); }, 100);
+  }, 300);
 }
 
 function updateMonitorMarkers(m) {
@@ -890,11 +879,11 @@ function updateMonitorMarkers(m) {
     if (a.lat && a.lng) {
       var color = a.status === '在线' ? '#4ade80' : a.status === '维修中' ? '#f59e0b' : '#ef4444';
       var popupContent = '<b>' + escapeHtml(a.name) + '</b><br>型号: ' + escapeHtml(a.model) +
-        '<br>状态: ' + a.status + '<br>位置: ' + escapeHtml(a.location);
-      var marker = L.marker([parseFloat(a.lat), parseFloat(a.lng)], {
-        icon: L.divIcon({className:'device-marker',html:'<div style="background:'+color+';width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.5)"></div>',iconSize:[16,16],iconAnchor:[8,8]})
+        '<br>序列号: ' + escapeHtml(a.sn) + '<br>状态: ' + a.status +
+        '<br>MQTT设备: ' + (a.mqttTopic || '无') + '<br>位置: ' + escapeHtml(a.location);
+      L.circleMarker([parseFloat(a.lat), parseFloat(a.lng)], {
+        radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9
       }).addTo(m).bindPopup(popupContent);
-      L.circle([parseFloat(a.lat), parseFloat(a.lng)], {radius: 500, color: color, fillColor: color, fillOpacity: 0.1, weight: 2}).addTo(m);
     }
   });
 }
@@ -909,7 +898,7 @@ function renderOnlineTable() {
     var signalPct = a.mqttTopic ? Math.min(100, Math.round(parseInt(signalLevel || 0) / 31 * 100)) : 0;
     return '<tr>' +
       '<td>' + escapeHtml(a.name) + '</td>' +
-      '<td>' + (a.mqttTopic ? '<span class="device-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '-') + '</td>' +
+      '<td>' + (a.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '-') + '</td>' +
       '<td>' + (a.mqttTopic ? signalLevel + ' (' + signalPct + '%)' : '-') + '</td>' +
       '<td>' + now() + '</td>' +
     '</tr>';
@@ -1176,7 +1165,7 @@ function renderCommandHistory() {
     return '<tr>' +
       '<td>' + h.time + '</td>' +
       '<td>' + escapeHtml(h.device) + '</td>' +
-      '<td>' + (h.mqttTopic ? '<span class="device-badge">' + escapeHtml(h.mqttTopic) + '</span>' : '-') + '</td>' +
+      '<td>' + (h.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(h.mqttTopic) + '</span>' : '-') + '</td>' +
       '<td><strong>' + escapeHtml(h.command) + '</strong></td>' +
       '<td><span style="' + resultCls + '">' + h.result + '</span></td>' +
       '<td style="font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escapeHtml(h.response) + '">' + escapeHtml(h.response) + '</td>' +
@@ -1200,12 +1189,12 @@ function sendCommand(cmd) {
     var realSent = publishMqttCommand(mqttTopic, cmd, { device: device.name });
     if (realSent) {
       document.getElementById('cmdResult').style.display = 'block';
-      document.getElementById('cmdResult').innerHTML = '<span style="color:#4ade80">指令发送 ✓ devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
-      showToast('远程指令已发送: ' + cmd + ' → ' + mqttTopic, 'success');
+      document.getElementById('cmdResult').innerHTML = '<span style="color:#4ade80">MQTT Pub ✓ devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+      showToast('MQTT指令已发送: ' + cmd + ' → ' + mqttTopic, 'success');
     }
   } else {
     document.getElementById('cmdResult').style.display = 'block';
-    document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">系统待机 Publish: devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+    document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">MQTT离线(模拟) Publish: devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
   }
 
   // Simulated responses
@@ -1239,7 +1228,7 @@ function sendCommand(cmd) {
       response: response
     });
     if (data.commandHistory.length > 200) data.commandHistory = data.commandHistory.slice(-200);
-    addActivity('远程指令', 'Pub devices/' + mqttTopic + '/cmd ' + cmd + ' -> ' + device.name + ' [' + result + ']');
+    addActivity('MQTT指令', 'Pub devices/' + mqttTopic + '/cmd ' + cmd + ' -> ' + device.name + ' [' + result + ']');
     saveData();
     renderCommandHistory();
   }, 1500);
@@ -1794,7 +1783,7 @@ function connectMqttBroker() {
   try {
     mqttClient = new Paho.MQTT.Client(broker, wsPort, '/mqtt', clientId);
     mqttClient.onConnectionLost = function(resp) {
-      console.log('设备已断开:', resp.errorMessage);
+      console.log('MQTT disconnected:', resp.errorMessage);
       mqttConnected = false;
       updateMqttStatusBadge(false);
       // Auto-reconnect after 5s
@@ -1806,21 +1795,21 @@ function connectMqttBroker() {
     mqttClient.onMessageArrived = function(msg) {
       var payload = msg.payloadString;
       var topic = msg.destinationName;
-      console.log('接收 [' + topic + ']:', payload);
+      console.log('MQTT RX [' + topic + ']:', payload);
       handleMqttMessage(topic, payload);
     };
 
     mqttClient.connect({
       onSuccess: function() {
-        console.log('设备已连接 to ' + broker + ':' + wsPort);
+        console.log('MQTT connected to ' + broker + ':' + wsPort);
         mqttConnected = true;
         updateMqttStatusBadge(true);
         subscribeDeviceTopics();
-        showToast('服务器已连接: ' + broker, 'success');
+        showToast('MQTT Broker已连接: ' + broker, 'success');
         addActivity('MQTT连接', '已连接 ' + broker + ':' + wsPort + ' (WebSocket)');
       },
       onFailure: function(err) {
-        console.log('连接失败:', err.errorMessage);
+        console.log('MQTT connection failed:', err.errorMessage);
         mqttConnected = false;
         updateMqttStatusBadge(false);
         // Try alternative ports if main one fails
@@ -1853,7 +1842,7 @@ function subscribeDeviceTopics() {
     var telemetryTopic = 'devices/' + d.mqttTopic + '/telemetry';
     mqttClient.subscribe(statusTopic, { qos: 1 });
     mqttClient.subscribe(telemetryTopic, { qos: 1 });
-    console.log('消息订阅:', statusTopic, telemetryTopic);
+    console.log('MQTT Sub:', statusTopic, telemetryTopic);
   });
 
   // Also subscribe to wildcard
@@ -1902,7 +1891,7 @@ function handleMqttMessage(topic, payload) {
 
 function publishMqttCommand(deviceTopic, cmd, params) {
   if (!mqttClient || !mqttConnected) {
-    showToast('设备未连接，无法发送指令', 'error');
+    showToast('MQTT未连接，无法发送指令', 'error');
     return false;
   }
   var msg = JSON.stringify({ cmd: cmd, params: params || {}, ts: Date.now() });
@@ -1912,17 +1901,17 @@ function publishMqttCommand(deviceTopic, cmd, params) {
   mqttMsg.qos = 1;
   mqttMsg.retained = false;
   mqttClient.send(mqttMsg);
-  console.log('发送 [' + topic + ']:', msg);
+  console.log('MQTT TX [' + topic + ']:', msg);
   return true;
 }
 
 function updateMqttStatusBadge(connected) {
-  var badge = document.getElementById('deviceStatusBadge');
+  var badge = document.getElementById('mqttStatusBadge');
   if (!badge) return;
   if (connected) {
-    badge.innerHTML = '<span class="status online"><span class="status-dot"></span>设备已连接</span>';
+    badge.innerHTML = '<span class="status online"><span class="status-dot"></span>MQTT已连接</span>';
   } else {
-    badge.innerHTML = '<span class="status offline"><span class="status-dot"></span>系统待机</span>';
+    badge.innerHTML = '<span class="status offline"><span class="status-dot"></span>MQTT离线(模拟)</span>';
   }
 }
 

@@ -99,7 +99,7 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
     <header class="header">
       <h2 id="pageTitle">工作台</h2>
       <div class="header-actions">
-        <span id="deviceStatusBadge"><span class="status offline"><span class="status-dot"></span>系统运行中</span></span>
+        <span id="mqttStatusBadge"><span class="status offline"><span class="status-dot"></span>MQTT连接中...</span></span>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="globalSearch" placeholder="搜索资产、设备、客户..." onkeyup="handleGlobalSearch(event)">
@@ -149,11 +149,11 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
           </div>
           <div class="toolbar-actions">
             <button class="btn btn-danger btn-sm" onclick="batchDeleteAssets()">批量删除</button>
-            <button class="btn btn-outline btn-sm" onclick="checkMqttDevices()">刷新设备状态</button>
+            <button class="btn btn-outline btn-sm" onclick="checkMqttDevices()">检测MQTT设备</button>
             <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 新增资产</button>
           </div>
         </div>
-        <div class="panel" style="padding:0;overflow:auto"><table id="assetTable"><thead><tr><th>设备名称</th><th>型号</th><th>序列号</th><th>类型</th><th>设备标识</th><th>状态</th><th>位置</th><th>采购日期</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+        <div class="panel" style="padding:0;overflow:auto"><table id="assetTable"><thead><tr><th>设备名称</th><th>型号</th><th>序列号</th><th>类型</th><th>MQTT主题</th><th>状态</th><th>位置</th><th>采购日期</th><th>操作</th></tr></thead><tbody></tbody></table></div>
       </div>
 
       <!-- SIM Page -->
@@ -177,9 +177,9 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
       <div class="page" id="page-monitor">
         <div class="panel"><h3>设备位置地图</h3><div id="map"></div></div>
         <div class="charts-row">
-          <div class="panel"><h3>设备连接状态</h3><div id="comStatus"></div></div>
+          <div class="panel"><h3>MQTT设备状态</h3><div id="comStatus"></div></div>
           <div class="panel"><h3>在线设备 <span id="onlineCount" style="font-size:13px;color:#6b7d8e"></span></h3>
-            <table><thead><tr><th>设备</th><th>设备标识</th><th>信号</th><th>最后上报</th></tr></thead><tbody id="onlineTable"></tbody></table>
+            <table><thead><tr><th>设备</th><th>MQTT主题</th><th>信号</th><th>最后上报</th></tr></thead><tbody id="onlineTable"></tbody></table>
           </div>
         </div>
       </div>
@@ -212,8 +212,8 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
         <div class="panel"><h3>指令下发</h3>
           <div class="match-row">
             <div class="form-group" style="margin-bottom:0"><label>目标设备</label><select id="cmdDevice"><option value="">选择设备...</option></select></div>
-            <div class="form-group" style="margin-bottom:0"><label>设备标识</label><input type="text" id="cmdTopic" placeholder="devices/sensor-temp-001/cmd" style="width:250px"></div>
-            <button class="btn btn-outline btn-sm" onclick="checkMqttDevices()" style="height:36px">刷新设备</button>
+            <div class="form-group" style="margin-bottom:0"><label>MQTT主题</label><input type="text" id="cmdTopic" placeholder="devices/sensor-temp-001/cmd" style="width:250px"></div>
+            <button class="btn btn-outline btn-sm" onclick="checkMqttDevices()" style="height:36px">MQTT发现</button>
           </div>
           <div class="cmd-grid">
             <button class="btn btn-primary cmd-btn" onclick="sendCommand('AT')">AT 通讯测试</button>
@@ -227,7 +227,7 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
           </div>
           <div class="cmd-result" id="cmdResult"></div>
         </div>
-        <div class="panel"><h3>指令历史</h3><table><thead><tr><th>时间</th><th>设备</th><th>设备标识</th><th>指令</th><th>结果</th><th>响应</th></tr></thead><tbody id="cmdHistory"></tbody></table></div>
+        <div class="panel"><h3>指令历史</h3><table><thead><tr><th>时间</th><th>设备</th><th>MQTT主题</th><th>指令</th><th>结果</th><th>响应</th></tr></thead><tbody id="cmdHistory"></tbody></table></div>
       </div>
 
       <!-- Alerts Page -->
@@ -342,13 +342,13 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
             <div class="form-group"><label>数据刷新间隔(秒)</label><input id="setRefreshInterval" type="number" placeholder="刷新间隔" min="5" max="300"></div>
           </div>
           <div class="form-group" style="border:1px solid #2A3440;padding:14px;border-radius:6px;background:#252D3A">
-            <label style="font-size:14px;color:#e0e6ed;margin-bottom:12px">设备连接配置</label>
+            <label style="font-size:14px;color:#e0e6ed;margin-bottom:12px">MQTT Broker 配置 (IoT设备连接)</label>
             <div class="form-row">
-              <div class="form-group"><label>服务器地址</label><input id="setMqttBroker" placeholder="broker.emqx.io"></div>
+              <div class="form-group"><label>Broker地址</label><input id="setMqttBroker" placeholder="broker.emqx.io"></div>
               <div class="form-group"><label>TCP端口</label><input id="setMqttPort" type="number" placeholder="1883"></div>
             </div>
-            <div class="form-group"><label>WebSocket端口</label><input id="setMqttWsPort" type="number" placeholder="8084"></div>
-            <label style="font-size:12px"><input type="checkbox" id="setMqttMonitor" style="width:auto;margin-right:6px"> 启用设备自动发现</label>
+            <div class="form-group"><label>WebSocket端口 (浏览器连接)</label><input id="setMqttWsPort" type="number" placeholder="8084"></div>
+            <label style="font-size:12px"><input type="checkbox" id="setMqttMonitor" style="width:auto;margin-right:6px"> 启用MQTT设备自动发现</label>
           </div>
           <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
         </div>
@@ -382,7 +382,7 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
         <div class="form-group"><label>类型</label><select id="assetType"><option>定位终端</option><option>通讯模块</option><option>传感器</option><option>控制设备</option><option>网关设备</option></select></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>设备标识</label><input id="assetMqttTopic" placeholder="例如: sensor-temp-001"></div>
+        <div class="form-group"><label>MQTT主题</label><input id="assetMqttTopic" placeholder="例如: sensor-temp-001"></div>
         <div class="form-group"><label>状态</label><select id="assetStatus"><option>在线</option><option>离线</option><option>维修中</option></select></div>
       </div>
       <div class="form-row">

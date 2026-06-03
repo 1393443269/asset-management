@@ -196,9 +196,10 @@ function switchPage(page) {
   var target = document.getElementById('page-' + page);
   if (target) target.classList.add('active');
   // Update title
-  document.getElementById('pageTitle').textContent = pageTitles[page] || page;
-  // Clear search
-  document.getElementById('globalSearch').value = '';
+  if (page !== 'bigscreen') {
+    document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+    document.getElementById('globalSearch').value = '';
+  }
 
   // Render page
   switch(page) {
@@ -1648,7 +1649,6 @@ function enterBigScreen() {
   var pg = document.getElementById('page-bigscreen');
   if (!pg) return;
   pg.classList.add('active');
-  document.querySelector('.wrap').style.display = 'none';
   document.body.style.overflow = 'hidden';
   renderBigScreen();
   bsTimer = setInterval(renderBigScreen, 10000);
@@ -1657,7 +1657,6 @@ function enterBigScreen() {
 function exitBigScreen() {
   var pg = document.getElementById('page-bigscreen');
   if (pg) pg.classList.remove('active');
-  document.querySelector('.wrap').style.display = 'flex';
   document.body.style.overflow = '';
   if (bsTimer) { clearInterval(bsTimer); bsTimer = null; }
   if (bsMap) { bsMap.remove(); bsMap = null; }

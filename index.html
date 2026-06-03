@@ -369,46 +369,46 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
 
     </div>
 
-    <!-- Big Screen Display (full-screen overlay) -->
-    <div class="page bigscreen-page" id="page-bigscreen">
-      <div class="bs-top">
-        <div class="bs-title">Asset Management 智能资产管理平台</div>
-        <div class="bs-datetime" id="bsDatetime"></div>
-        <button class="bs-exit" onclick="switchPage('dashboard')">✕ 退出大屏</button>
+  </main>
+</div>
+
+<!-- Big Screen Display (full-screen overlay, outside wrap) -->
+<div class="page bigscreen-page" id="page-bigscreen">
+  <div class="bs-top">
+    <div class="bs-title">Asset Management 智能资产管理平台</div>
+    <div class="bs-datetime" id="bsDatetime"></div>
+    <button class="bs-exit" onclick="switchPage('dashboard')">✕ 退出大屏</button>
+  </div>
+  <div class="bs-body">
+    <div class="bs-left">
+      <div class="bs-panel">
+        <div class="bs-panel-title">📋 设备状态</div>
+        <div id="bsDeviceList"></div>
       </div>
-      <div class="bs-body">
-        <div class="bs-left">
-          <div class="bs-panel">
-            <div class="bs-panel-title">📋 设备状态</div>
-            <div id="bsDeviceList"></div>
-          </div>
-          <div class="bs-panel">
-            <div class="bs-panel-title">⚠ 最近告警</div>
-            <div id="bsAlertList"></div>
-          </div>
-        </div>
-        <div class="bs-center">
-          <div class="bs-kpi-row" id="bsKpiRow"></div>
-          <div class="bs-map-wrap"><div id="bsMap"></div></div>
-        </div>
-        <div class="bs-right">
-          <div class="bs-panel">
-            <div class="bs-panel-title">📊 设备统计</div>
-            <div class="bs-chart"><canvas id="bsPieChart"></canvas></div>
-          </div>
-          <div class="bs-panel">
-            <div class="bs-panel-title">📶 信号趋势</div>
-            <div class="bs-chart"><canvas id="bsSignalChart"></canvas></div>
-          </div>
-          <div class="bs-panel">
-            <div class="bs-panel-title">📋 最近活动</div>
-            <div id="bsActivityFeed"></div>
-          </div>
-        </div>
+      <div class="bs-panel">
+        <div class="bs-panel-title">⚠ 最近告警</div>
+        <div id="bsAlertList"></div>
       </div>
     </div>
-
-  </main>
+    <div class="bs-center">
+      <div class="bs-kpi-row" id="bsKpiRow"></div>
+      <div class="bs-map-wrap"><div id="bsMap"></div></div>
+    </div>
+    <div class="bs-right">
+      <div class="bs-panel">
+        <div class="bs-panel-title">📊 设备统计</div>
+        <div class="bs-chart"><canvas id="bsPieChart"></canvas></div>
+      </div>
+      <div class="bs-panel">
+        <div class="bs-panel-title">📶 信号趋势</div>
+        <div class="bs-chart"><canvas id="bsSignalChart"></canvas></div>
+      </div>
+      <div class="bs-panel">
+        <div class="bs-panel-title">📋 最近活动</div>
+        <div id="bsActivityFeed"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Asset Modal -->

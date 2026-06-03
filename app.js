@@ -12,7 +12,7 @@ const STORAGE_KEY = 'assethub_prod_v1';
 
 const defaultData = {
   assets: [
-    { id:'a1', name:'EC800M-CN 通信模组', model:'EC800M-CN', sn:'869598078703629', type:'通讯模块', mqttTopic:'ec800m-sz001', status:'在线', location:'深圳', purchaseDate:'2026-06-03', lat:22.5431, lng:113.9432, remark:'COM3 AT端口 | 中国移动 LTE | CSQ:29 | 固件 EC800MCNGBR06A05M08', createdAt:'2026-06-03 10:00' }
+    { id:'a1', name:'EC800M-CN 通信模组', model:'EC800M-CN', sn:'869598078703629', type:'通讯模块', mqttTopic:'ec800m-sz001', status:'在线', location:'桂林', purchaseDate:'2026-06-03', lat:25.2736, lng:110.2902, remark:'COM3 AT端口 | 中国移动 LTE | CSQ:29 | 固件 EC800MCNGBR06A05M08', createdAt:'2026-06-03 10:00' }
   ],
   sims: [],
   recharges: [],

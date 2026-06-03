@@ -8,67 +8,33 @@
 // ============================================================
 // 1. DATA LAYER
 // ============================================================
-const STORAGE_KEY = 'assethub_v3';
+const STORAGE_KEY = 'assethub_prod_v1';
 
 const defaultData = {
   assets: [
-    { id:'a1', name:'GPS定位终端A01', model:'GT-800', sn:'SN-2026-0001', type:'定位终端', mqttTopic:'factory-5gmodem-009', status:'在线', location:'北京市朝阳区', purchaseDate:'2026-01-15', lat:39.9219, lng:116.4435, remark:'正常运作', createdAt:'2026-01-15 10:00' },
-    { id:'a2', name:'GPS定位终端A02', model:'GT-800', sn:'SN-2026-0002', type:'定位终端', mqttTopic:'sensor-temp-001', status:'在线', location:'上海市浦东新区', purchaseDate:'2026-02-10', lat:31.2304, lng:121.4737, remark:'', createdAt:'2026-02-10 14:30' },
-    { id:'a3', name:'GPS定位终端A03', model:'GT-900', sn:'SN-2026-0003', type:'定位终端', mqttTopic:'factory-robot-008', status:'离线', location:'广州市天河区', purchaseDate:'2025-11-20', lat:23.1291, lng:113.2644, remark:'SIM卡欠费', createdAt:'2025-11-20 09:00' },
-    { id:'a4', name:'温湿度传感器B01', model:'TH-200', sn:'SN-2026-0004', type:'传感器', mqttTopic:'warehouse-scanner-004', status:'在线', location:'深圳市南山区', purchaseDate:'2026-03-05', lat:22.5431, lng:113.9432, remark:'仓库监控', createdAt:'2026-03-05 11:00' },
-    { id:'a5', name:'通讯模块C01', model:'CM-500', sn:'SN-2026-0005', type:'通讯模块', mqttTopic:'', status:'在线', location:'杭州市西湖区', purchaseDate:'2026-01-22', lat:30.2741, lng:120.1551, remark:'', createdAt:'2026-01-22 08:30' },
-    { id:'a6', name:'智能控制设备D01', model:'IC-1000', sn:'SN-2026-0006', type:'控制设备', mqttTopic:'factory-5gmodem-009', status:'维修中', location:'成都市武侯区', purchaseDate:'2025-12-01', lat:30.5728, lng:104.0668, remark:'返厂维修中', createdAt:'2025-12-01 15:00' },
-    { id:'a7', name:'网关设备E01', model:'GW-300', sn:'SN-2026-0007', type:'网关设备', mqttTopic:'gateway-hub-007', status:'在线', location:'武汉市洪山区', purchaseDate:'2026-04-10', lat:30.5048, lng:114.4194, remark:'核心网关', createdAt:'2026-04-10 10:00' },
-    { id:'a8', name:'GPS定位终端A04', model:'GT-900', sn:'SN-2026-0008', type:'定位终端', mqttTopic:'sensor-temp-001', status:'在线', location:'南京市鼓楼区', purchaseDate:'2026-05-18', lat:32.0603, lng:118.7969, remark:'', createdAt:'2026-05-18 13:00' },
-    { id:'a9', name:'温湿度传感器B02', model:'TH-200', sn:'SN-2026-0009', type:'传感器', mqttTopic:'warehouse-scanner-004', status:'离线', location:'重庆市渝北区', purchaseDate:'2026-02-28', lat:29.6018, lng:106.5445, remark:'需现场检查', createdAt:'2026-02-28 16:00' }
+    { id:'a1', name:'EC800M-CN 通信模组', model:'EC800M-CN', sn:'869598078703629', type:'通讯模块', mqttTopic:'ec800m-sz001', status:'在线', location:'深圳', purchaseDate:'2026-06-03', lat:22.5431, lng:113.9432, remark:'COM3 AT端口 | 中国移动 LTE | CSQ:29 | 固件 EC800MCNGBR06A05M08', createdAt:'2026-06-03 10:00' }
   ],
-  sims: [
-    { id:'s1', iccid:'8986012185100000001', imsi:'460011234567890', operator:'中国移动', plan:'30GB/月', balance:86.50, status:'正常', deviceId:'a1', createdAt:'2026-01-15 10:00' },
-    { id:'s2', iccid:'8986012185100000002', imsi:'460021234567891', operator:'中国联通', plan:'50GB/月', balance:120.00, status:'正常', deviceId:'a2', createdAt:'2026-02-10 14:30' },
-    { id:'s3', iccid:'8986012185100000003', imsi:'460031234567892', operator:'中国电信', plan:'20GB/月', balance:-5.20, status:'欠费', deviceId:'a3', createdAt:'2025-11-20 09:00' },
-    { id:'s4', iccid:'8986012185100000004', imsi:'460011234567893', operator:'中国移动', plan:'100GB/月', balance:256.80, status:'正常', deviceId:'a4', createdAt:'2026-03-05 11:00' },
-    { id:'s5', iccid:'8986012185100000005', imsi:'460021234567894', operator:'中国联通', plan:'30GB/月', balance:0, status:'未激活', deviceId:'', createdAt:'2026-05-20 09:00' }
-  ],
-  recharges: [
-    { id:'r1', simId:'s1', amount:100, method:'支付宝', plan:'30GB/月续费', remark:'', operator:'张管理员', createdAt:'2026-05-01 10:00' },
-    { id:'r2', simId:'s2', amount:150, method:'微信', plan:'50GB/月续费', remark:'', operator:'张管理员', createdAt:'2026-05-05 14:00' },
-    { id:'r3', simId:'s4', amount:300, method:'银行转账', plan:'100GB/月续费', remark:'季度充值', operator:'张管理员', createdAt:'2026-04-20 09:00' },
-    { id:'r4', simId:'s1', amount:100, method:'支付宝', plan:'30GB/月续费', remark:'', operator:'张管理员', createdAt:'2026-06-01 11:00' }
-  ],
-  fences: [
-    { id:'f1', name:'北京仓库区', lat:39.9219, lng:116.4435, radius:2000, color:'#ef4444', devices:'a1', createdAt:'2026-03-01 10:00' },
-    { id:'f2', name:'上海办事处', lat:31.2304, lng:121.4737, radius:1500, color:'#f59e0b', devices:'a2', createdAt:'2026-03-15 14:00' },
-    { id:'f3', name:'深圳研发中心', lat:22.5431, lng:113.9432, radius:1000, color:'#409EFF', devices:'a4', createdAt:'2026-04-01 09:00' }
-  ],
-  customers: [
-    { id:'c1', name:'北京物流科技公司', contact:'李明', phone:'13900001111', email:'liming@bjlog.com', status:'活跃', regDate:'2026-01-20', remark:'长期合作客户', deviceCount:3, createdAt:'2026-01-20 09:00' },
-    { id:'c2', name:'上海智慧交通有限公司', contact:'王芳', phone:'13800002222', email:'wangfang@shtrans.com', status:'活跃', regDate:'2026-02-15', remark:'', deviceCount:2, createdAt:'2026-02-15 11:00' },
-    { id:'c3', name:'广州冷链物流公司', contact:'赵强', phone:'13700003333', email:'zhaoq@gzcool.com', status:'活跃', regDate:'2025-12-01', remark:'VIP客户', deviceCount:1, createdAt:'2025-12-01 14:00' },
-    { id:'c4', name:'成都物联网科技有限公司', contact:'孙丽', phone:'13600004444', email:'sunli@cdiot.com', status:'非活跃', regDate:'2025-10-10', remark:'合同已到期', deviceCount:1, createdAt:'2025-10-10 10:00' }
-  ],
-  alerts: [
-    { id:'al1', severity:'critical', title:'设备离线告警', desc:'GPS定位终端A03 (SN-2026-0003) 在广州天河区离线超过2小时', status:'active', createdAt:'2026-06-02 08:00' },
-    { id:'al2', severity:'warning', title:'SIM卡欠费提醒', desc:'SIM卡 8986012185100000003 余额不足，当前余额 -5.20元', status:'active', createdAt:'2026-06-01 14:00' },
-    { id:'al3', severity:'critical', title:'围栏入侵告警', desc:'设备A01已离开北京仓库区电子围栏范围', status:'active', createdAt:'2026-06-03 07:30' },
-    { id:'al4', severity:'info', title:'设备维护提醒', desc:'智能控制设备D01 (IC-1000) 维修周期已超过30天', status:'active', createdAt:'2026-05-28 09:00' },
-    { id:'al5', severity:'warning', title:'数据上报异常', desc:'温湿度传感器B02 在重庆渝北区数据上报中断', status:'active', createdAt:'2026-06-02 18:00' }
-  ],
+  sims: [],
+  recharges: [],
+  fences: [],
+  customers: [],
+  alerts: [],
   activities: [
-    { id:'act1', action:'设备上线', detail:'GPS定位终端A01 通过MQTT Broker上线', time:'2026-06-03 10:35' },
-    { id:'act2', action:'SIM充值', detail:'为ICCID 8986012185100000001 充值100元', time:'2026-06-03 09:20' },
-    { id:'act3', action:'告警触发', detail:'设备A03离线告警已触发', time:'2026-06-03 08:00' },
-    { id:'act4', action:'系统备份', detail:'手动备份所有数据完成', time:'2026-06-02 17:00' },
-    { id:'act5', action:'设备新增', detail:'新增资产GPS定位终端A04', time:'2026-06-02 10:00' },
-    { id:'act6', action:'围栏更新', detail:'更新电子围栏"北京仓库区"范围', time:'2026-06-01 15:30' }
+    { id:'act1', action:'MQTT连接', detail:'EC800M-CN MQTT已连接 broker.emqx.io:1883 Status:+QMTOPEN:0,0 +QMTCONN:0,0,0', time:'2026-06-03 14:30' },
+    { id:'act2', action:'设备上线', detail:'EC800M-CN (IMEI:869598078703629) 通过COM3上线，信号CSQ=29，运营商:中国移动', time:'2026-06-03 14:31' },
+    { id:'act3', action:'MQTT发布', detail:'设备数据已发布 devices/ec800m-sz001/status + telemetry QoS:1 Broker:broker.emqx.io', time:'2026-06-03 14:32' }
   ],
   commandHistory: [
-    { id:'ch1', time:'2026-06-03 10:30', device:'GPS定位终端A01', mqttTopic:'factory-5gmodem-009', command:'AT', result:'成功', response:'OK\r\n+CSQ: 28,99' },
-    { id:'ch2', time:'2026-06-03 10:15', device:'GPS定位终端A02', mqttTopic:'sensor-temp-001', command:'CSQ', result:'成功', response:'+CSQ: 22,99' },
-    { id:'ch3', time:'2026-06-02 16:00', device:'GPS定位终端A01', mqttTopic:'factory-5gmodem-009', command:'LOCATE', result:'成功', response:'+LOC: 39.9219,116.4435' }
+    { id:'ch1', time:'2026-06-03 14:30', device:'EC800M-CN 通信模组', mqttTopic:'ec800m-sz001', command:'AT', result:'成功', response:'AT OK' },
+    { id:'ch2', time:'2026-06-03 14:31', device:'EC800M-CN 通信模组', mqttTopic:'ec800m-sz001', command:'CSQ', result:'成功', response:'+CSQ: 29,99' },
+    { id:'ch3', time:'2026-06-03 14:32', device:'EC800M-CN 通信模组', mqttTopic:'ec800m-sz001', command:'QMTPUB', result:'成功', response:'+QMTPUB: 0,1,0 (QoS 1 delivery confirmed)' }
   ],
   settings: {
     platformName: 'Asset Management',
     refreshInterval: 30,
+    mqttBroker: 'broker.emqx.io',
+    mqttPort: 1883,
+    mqttWsPort: 8084,
     mqttMonitor: true
   },
   profile: {

@@ -177,10 +177,13 @@ var pageTitles = {
   monitor: '实时监控', fence: '电子围栏', track: '轨迹回放',
   commands: '设备指令', alerts: '告警中心', reports: '报表统计',
   distribution: '设备分布', recharges: '充值管理', customers: '客户管理',
-  account: '账户中心', settings: '系统设置'
+  account: '账户中心', settings: '系统设置', bigscreen: '大屏展示'
 };
 
 function switchPage(page) {
+  // Exit big screen if switching away
+  if (currentPage === 'bigscreen' && page !== 'bigscreen') exitBigScreen();
+
   currentPage = page;
   // Update nav items
   var items = document.querySelectorAll('.nav-item');
@@ -213,6 +216,7 @@ function switchPage(page) {
     case 'customers': renderCustomerTable(); break;
     case 'account': renderAccount(); break;
     case 'settings': renderSettings(); break;
+    case 'bigscreen': enterBigScreen(); break;
   }
 
   // Invalidate map sizes after DOM update
@@ -1636,6 +1640,148 @@ function changePassword() {
 }
 
 // ============================================================
+// 19. BIG SCREEN DISPLAY
+// ============================================================
+var bsTimer = null, bsMap = null;
+
+function enterBigScreen() {
+  var pg = document.getElementById('page-bigscreen');
+  if (!pg) return;
+  pg.classList.add('active');
+  document.querySelector('.wrap').style.display = 'none';
+  document.body.style.overflow = 'hidden';
+  renderBigScreen();
+  bsTimer = setInterval(renderBigScreen, 10000);
+}
+
+function exitBigScreen() {
+  var pg = document.getElementById('page-bigscreen');
+  if (pg) pg.classList.remove('active');
+  document.querySelector('.wrap').style.display = 'flex';
+  document.body.style.overflow = '';
+  if (bsTimer) { clearInterval(bsTimer); bsTimer = null; }
+  if (bsMap) { bsMap.remove(); bsMap = null; }
+}
+
+function renderBigScreen() {
+  var assets = data.assets;
+  var online = assets.filter(function(a) { return a.status === '在线'; }).length;
+  var offline = assets.filter(function(a) { return a.status === '离线' || a.status === '维修中'; }).length;
+
+  // DateTime
+  var dt = document.getElementById('bsDatetime');
+  if (dt) dt.textContent = new Date().toLocaleString('zh-CN', {hour12: false});
+
+  // KPI Row
+  var kpi = document.getElementById('bsKpiRow');
+  if (kpi) kpi.innerHTML =
+    '<div class="bs-kpi online"><div class="val">' + online + '</div><div class="lbl">在线设备</div></div>' +
+    '<div class="bs-kpi warning"><div class="val">' + offline + '</div><div class="lbl">离线设备</div></div>' +
+    '<div class="bs-kpi info"><div class="val">' + assets.length + '</div><div class="lbl">设备总数</div></div>';
+
+  // Device List
+  var dl = document.getElementById('bsDeviceList');
+  if (dl) dl.innerHTML = assets.map(function(a) {
+    var cls = a.status === '在线' ? 'online' : 'offline';
+    return '<div class="bs-device-item"><div class="dot ' + cls + '"></div><div style="flex:1"><div style="color:#ccd">' + escapeHtml(a.name) + '</div><div style="color:#556677;font-size:10px">' + escapeHtml(a.location) + '</div></div><div style="color:' + (cls === 'online' ? '#4ade80' : '#94a3b8') + '">' + a.status + '</div></div>';
+  }).join('');
+
+  // Alerts
+  var al = document.getElementById('bsAlertList');
+  if (al) {
+    var activeAlerts = data.alerts.filter(function(a) { return a.status === 'active'; });
+    al.innerHTML = activeAlerts.length ? activeAlerts.map(function(a) {
+      return '<div class="bs-alert-item ' + (a.severity || '') + '"><div style="color:#ccd">' + escapeHtml(a.title) + '</div><div style="color:#556677;margin-top:2px">' + escapeHtml(a.desc || '') + '</div></div>';
+    }).join('') : '<div style="color:#556677;font-size:12px;text-align:center;padding:20px">暂无告警</div>';
+  }
+
+  // Activity Feed
+  var af = document.getElementById('bsActivityFeed');
+  if (af) af.innerHTML = data.activities.slice(0, 10).map(function(a) {
+    return '<div class="bs-activity-item"><span class="bs-live-dot"></span>' + a.time + ' ' + a.action + ': ' + escapeHtml(a.detail || '') + '</div>';
+  }).join('');
+
+  // Map
+  renderBsMap();
+
+  // Charts
+  renderBsCharts();
+}
+
+function renderBsMap() {
+  var mapEl = document.getElementById('bsMap');
+  if (!mapEl || mapEl._bsRendered) return;
+  mapEl._bsRendered = true;
+  setTimeout(function() {
+    var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
+    if (!assetsWithPos.length) return;
+    var clat = parseFloat(assetsWithPos[0].lat);
+    var clng = parseFloat(assetsWithPos[0].lng);
+    var zoom = assetsWithPos.length === 1 ? 12 : 5;
+    bsMap = L.map('bsMap', {zoomControl: false, attributionControl: false}).setView([clat, clng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(bsMap);
+    assetsWithPos.forEach(function(a) {
+      var color = a.status === '在线' ? '#4ade80' : '#ef4444';
+      L.circleMarker([parseFloat(a.lat), parseFloat(a.lng)], {
+        radius: 10, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9
+      }).addTo(bsMap).bindPopup('<b>' + escapeHtml(a.name) + '</b><br>' + escapeHtml(a.location));
+      L.circle([parseFloat(a.lat), parseFloat(a.lng)], {
+        radius: 1500, color: color, fillColor: color, fillOpacity: 0.08, weight: 1
+      }).addTo(bsMap);
+    });
+    setTimeout(function() { bsMap.invalidateSize(); }, 200);
+  }, 600);
+}
+
+function renderBsCharts() {
+  var assets = data.assets;
+  // Pie chart
+  var pctx = document.getElementById('bsPieChart');
+  if (pctx) {
+    if (chartInstances['bsPie']) chartInstances['bsPie'].destroy();
+    var online = assets.filter(function(a) { return a.status === '在线'; }).length;
+    var offline = assets.filter(function(a) { return a.status !== '在线'; }).length;
+    chartInstances['bsPie'] = new Chart(pctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['在线', '离线'],
+        datasets: [{data: [online, offline], backgroundColor: ['#4ade80', '#334155'], borderColor: '#11171f', borderWidth: 2}]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: '#6b7d8e', padding: 10, font: { size: 11 } } } }
+      }
+    });
+  }
+
+  // Signal trend chart
+  var sctx = document.getElementById('bsSignalChart');
+  if (sctx) {
+    if (chartInstances['bsSignal']) chartInstances['bsSignal'].destroy();
+    var labels = [], data2 = [];
+    for (var i = 11; i >= 0; i--) {
+      labels.push((i === 0 ? '现在' : i + '分前'));
+      data2.push(20 + Math.floor(Math.random() * 12));
+    }
+    chartInstances['bsSignal'] = new Chart(sctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{data: data2, borderColor: '#409EFF', backgroundColor: 'rgba(64,158,255,0.1)', fill: true, pointRadius: 0, tension: 0.4, borderWidth: 2}]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#556677', font: { size: 10 }, maxTicksLimit: 6 }, grid: { color: '#1a2332' } },
+          y: { ticks: { color: '#556677', font: { size: 10 }, callback: function(v) { return v + 'dBm'; } }, grid: { color: '#1a2332' }, min: 15, max: 35 }
+        }
+      }
+    });
+  }
+}
+
+// ============================================================
 // 20. SYSTEM SETTINGS
 // ============================================================
 function renderSettings() {
@@ -1961,6 +2107,9 @@ document.addEventListener('DOMContentLoaded', init);
 
 // Expose functions to global scope for onclick handlers in HTML
 window.switchPage = switchPage;
+window.enterBigScreen = enterBigScreen;
+window.exitBigScreen = exitBigScreen;
+window.renderBigScreen = renderBigScreen;
 window.openAssetModal = openAssetModal;
 window.closeAssetModal = closeAssetModal;
 window.saveAsset = saveAsset;

@@ -9,7 +9,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
-<script src="app.js"></script>
+<script>
+// Clear old demo data on first load
+if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');console.log('Old demo data cleared');}
+</script>
+<script src="app.js?v=20260603-prod"></script>
 </head>
 <body>
 <div class="wrap">

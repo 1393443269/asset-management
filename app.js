@@ -1401,26 +1401,12 @@ function renderReports() {
 // ============================================================
 // 17. DEVICE DISTRIBUTION
 // ============================================================
-// China province coordinates (approx centers)
-var CHINA_PROVINCES = [
-  {name:'北京',lat:39.90,lng:116.40},{name:'上海',lat:31.23,lng:121.47},{name:'广东',lat:23.13,lng:113.26},
-  {name:'浙江',lat:30.27,lng:120.15},{name:'四川',lat:30.57,lng:104.06},{name:'湖北',lat:30.59,lng:114.30},
-  {name:'江苏',lat:32.06,lng:118.79},{name:'重庆',lat:29.56,lng:106.55},{name:'福建',lat:26.07,lng:119.30},
-  {name:'山东',lat:36.67,lng:116.98},{name:'广西',lat:22.82,lng:108.37},{name:'陕西',lat:34.26,lng:108.94},
-  {name:'湖南',lat:28.19,lng:112.97},{name:'河南',lat:34.76,lng:113.65},{name:'安徽',lat:31.86,lng:117.28},
-  {name:'江西',lat:28.68,lng:115.89},{name:'河北',lat:38.04,lng:114.48},{name:'云南',lat:25.04,lng:102.71},
-  {name:'贵州',lat:26.65,lng:106.63},{name:'辽宁',lat:41.80,lng:123.43},{name:'吉林',lat:43.89,lng:125.32},
-  {name:'黑龙江',lat:45.80,lng:126.53},{name:'内蒙古',lat:40.82,lng:111.75},{name:'山西',lat:37.87,lng:112.55},
-  {name:'甘肃',lat:36.06,lng:103.83},{name:'新疆',lat:43.79,lng:87.62},{name:'西藏',lat:29.65,lng:91.13},
-  {name:'青海',lat:36.62,lng:101.78},{name:'宁夏',lat:38.47,lng:106.26},{name:'海南',lat:20.02,lng:110.35},
-  {name:'天津',lat:39.12,lng:117.19},{name:'台湾',lat:25.03,lng:121.56},{name:'香港',lat:22.28,lng:114.17},
-  {name:'澳门',lat:22.20,lng:113.55}
-];
+var CHINA_PROVINCES = ['北京','上海','广东','浙江','四川','湖北','江苏','重庆','福建','山东','广西','陕西','湖南','河南','安徽','江西','河北','云南','贵州','辽宁','吉林','黑龙江','内蒙古','山西','甘肃','新疆','西藏','青海','宁夏','海南','天津','台湾','香港','澳门'];
 
 function renderDistribution() {
   renderDistStats();
   setTimeout(function() {
-    renderDistMap();
+    renderDistAmap();
     renderDistProvinceChart();
     renderDistProvinceList();
   }, 300);
@@ -1429,66 +1415,83 @@ function renderDistribution() {
 function renderDistStats() {
   var el = document.getElementById('distStats');
   if (!el) return;
-  var total = data.assets.length;
-  var online = data.assets.filter(function(a){return a.status==='在线';}).length;
+  var total = data.assets.length, online = data.assets.filter(function(a){return a.status==='在线';}).length;
   el.innerHTML =
-    '<div class="card"><div class="label">覆盖省份</div><div class="num">' + CHINA_PROVINCES.length + '</div><div class="change up">全国范围</div></div>' +
-    '<div class="card"><div class="label">设备总数</div><div class="num">' + total + '</div><div class="change up">台</div></div>' +
-    '<div class="card"><div class="label">在线设备</div><div class="num" style="color:#4ade80">' + online + '</div><div class="change up">在线率 ' + (total ? Math.round(online/total*100) : 0) + '%</div></div>' +
-    '<div class="card"><div class="label">城市覆盖</div><div class="num">' + new Set(data.assets.map(function(a){return a.location;})).size + '</div><div class="change info">个</div></div>';
+    '<div class="card"><div class="label">覆盖省份</div><div class="num">34</div><div class="change up">全国范围</div></div>' +
+    '<div class="card"><div class="label">设备总数</div><div class="num">'+total+'</div><div class="change up">台</div></div>' +
+    '<div class="card"><div class="label">在线设备</div><div class="num" style="color:#4ade80">'+online+'</div><div class="change up">在线率 '+(total?Math.round(online/total*100):0)+'%</div></div>' +
+    '<div class="card"><div class="label">城市覆盖</div><div class="num">'+new Set(data.assets.map(function(a){return a.location;})).size+'</div><div class="change info">个</div></div>';
 }
 
-function renderDistMap() {
+function renderDistAmap() {
   var mapEl = document.getElementById('distMap');
   if (!mapEl) return;
-  // Always destroy old map to allow re-render
-  if (maps['dist']) { maps['dist'].remove(); delete maps['dist']; }
-  if (mapEl._leaflet_id) { var old = L.map(mapEl); old.remove(); }
-  mapEl._distRendered = undefined;
-  delete mapEl._distRendered;
-  var m = L.map('distMap', {zoomControl: true}).setView([35.86, 104.19], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18}).addTo(m);
+  if (maps['dist']) { maps['dist'].destroy(); delete maps['dist']; }
+  mapEl.innerHTML = '';
 
-  // Aggregate devices by province
-  var provinceData = {};
-  data.assets.forEach(function(a) {
-    var prov = findProvince(a.location) || a.location || '未知';
-    if (!provinceData[prov]) provinceData[prov] = {total:0, online:0, cities:{}};
-    provinceData[prov].total++;
-    if (a.status === '在线') provinceData[prov].online++;
-    var city = a.location || '未知';
-    provinceData[prov].cities[city] = (provinceData[prov].cities[city]||0) + 1;
-  });
-
-  // Place markers for each province
-  CHINA_PROVINCES.forEach(function(p) {
-    var pd = provinceData[p.name];
-    if (!pd || pd.total === 0) return;
-    var radius = Math.min(22, Math.max(8, pd.total * 5));
-    var color = pd.online === pd.total ? '#4ade80' : pd.online > 0 ? '#f59e0b' : '#ef4444';
-    var marker = L.circleMarker([p.lat, p.lng], {
-      radius: radius, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.85
-    }).addTo(m);
-
-    var popupHtml = '<div style="min-width:180px"><b style="font-size:14px">' + p.name + '</b>' +
-      '<br>设备总数: <b>' + pd.total + '</b> | 在线: <b style="color:' + (pd.online===pd.total?'#4ade80':'#f59e0b') + '">' + pd.online + '</b>' +
-      '<br>在线率: ' + (pd.total?Math.round(pd.online/pd.total*100):0) + '%' +
-      '<br><button onclick="showProvinceDetail(\'' + p.name + '\')" style="margin-top:6px;padding:4px 12px;background:#409EFF;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px">查看详情 →</button>' +
-      '</div>';
-    marker.bindPopup(popupHtml);
-    marker.on('click', function() { showProvinceDetail(p.name); });
-
-    // Coverage circle
-    L.circle([p.lat, p.lng], {radius: 120000, color: color, fillColor: color, fillOpacity: 0.06, weight: 1}).addTo(m);
+  var m = new AMap.Map('distMap', {
+    zoom: 5, center: [108, 35], mapStyle: 'amap://styles/darkblue',
+    features: ['bg','road','building','point']
   });
   maps['dist'] = m;
-  setTimeout(function() { m.invalidateSize(); }, 200);
+
+  // Province device aggregation
+  var provinceData = {};
+  data.assets.forEach(function(a) {
+    var prov = findProvince(a.location) || '未知';
+    if (!provinceData[prov]) provinceData[prov] = {total:0, online:0};
+    provinceData[prov].total++;
+    if (a.status === '在线') provinceData[prov].online++;
+  });
+
+  // Add province labels with device counts
+  var provinceCenters = {
+    '北京':[116.40,39.90],'上海':[121.47,31.23],'广东':[113.26,23.13],'浙江':[120.15,30.27],'四川':[104.06,30.57],
+    '湖北':[114.30,30.59],'江苏':[118.79,32.06],'重庆':[106.55,29.56],'福建':[119.30,26.07],'山东':[116.98,36.67],
+    '广西':[108.37,22.82],'陕西':[108.94,34.26],'湖南':[112.97,28.19],'河南':[113.65,34.76],'安徽':[117.28,31.86],
+    '江西':[115.89,28.68],'河北':[114.48,38.04],'云南':[102.71,25.04],'贵州':[106.63,26.65],'辽宁':[123.43,41.80],
+    '吉林':[125.32,43.89],'黑龙江':[126.53,45.80],'内蒙古':[111.75,40.82],'山西':[112.55,37.87],'甘肃':[103.83,36.06],
+    '新疆':[87.62,43.79],'西藏':[91.13,29.65],'青海':[101.78,36.62],'宁夏':[106.26,38.47],'海南':[110.35,20.02],
+    '天津':[117.19,39.12],'台湾':[121.56,25.03],'香港':[114.17,22.28],'澳门':[113.55,22.20]
+  };
+
+  Object.keys(provinceCenters).forEach(function(name) {
+    var pd = provinceData[name];
+    if (!pd || pd.total === 0) return;
+    var pos = provinceCenters[name];
+    var color = pd.online === pd.total ? '#4ade80' : pd.online > 0 ? '#f59e0b' : '#ef4444';
+    var size = Math.min(32, Math.max(14, pd.total * 7)) + 'px';
+
+    // Circle marker
+    var circle = new AMap.CircleMarker({
+      center: pos, radius: Math.min(22, Math.max(8, pd.total * 5)) + 2,
+      fillColor: color, fillOpacity: 0.3, strokeColor: color, strokeWeight: 1, zIndex: 10
+    });
+    circle.setMap(m);
+
+    // Text label
+    var label = new AMap.Text({
+      text: name + '\n' + pd.total + '台',
+      position: pos, anchor: 'center',
+      style: {
+        'background': 'rgba(0,0,0,0.75)', 'border': '1px solid ' + color,
+        'border-radius': '6px', 'padding': '4px 10px', 'color': '#fff',
+        'font-size': '12px', 'text-align': 'center', 'white-space': 'nowrap', 'cursor': 'pointer'
+      }
+    });
+    label.setMap(m);
+    label.on('click', function() { showProvinceDetail(name); });
+  });
+
+  // Click on map to close detail
+  m.on('click', function() { closeDistDetail(); });
+  setTimeout(function() { m.setFitView(); }, 300);
 }
 
 function findProvince(loc) {
   if (!loc) return null;
   for (var i = 0; i < CHINA_PROVINCES.length; i++) {
-    if (loc.indexOf(CHINA_PROVINCES[i].name) !== -1) return CHINA_PROVINCES[i].name;
+    if (loc.indexOf(CHINA_PROVINCES[i]) !== -1) return CHINA_PROVINCES[i];
   }
   return null;
 }
@@ -1503,7 +1506,7 @@ function showProvinceDetail(provinceName) {
   if (!panel || !body) return;
   title.textContent = provinceName + ' - 设备详情 (' + detailDevices.length + '台)';
   body.innerHTML = detailDevices.map(function(a) {
-    return '<tr><td><strong>' + escapeHtml(a.name) + '</strong></td><td>' + escapeHtml(a.model) + '</td><td style="font-size:11px">' + escapeHtml(a.sn) + '</td><td>' + statusBadge(a.status) + '</td><td>' + escapeHtml(a.location) + '</td><td style="font-size:11px;color:#6b7d8e">' + (a.createdAt||'--') + '</td></tr>';
+    return '<tr><td><strong>'+escapeHtml(a.name)+'</strong></td><td>'+escapeHtml(a.model)+'</td><td style="font-size:11px">'+escapeHtml(a.sn)+'</td><td>'+statusBadge(a.status)+'</td><td>'+escapeHtml(a.location)+'</td><td style="font-size:11px;color:#6b7d8e">'+(a.createdAt||'--')+'</td></tr>';
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:#6b7d8e;padding:20px">该省份暂无设备</td></tr>';
   panel.style.display = 'block';
   panel.scrollIntoView({behavior:'smooth'});
@@ -1520,29 +1523,18 @@ function renderDistProvinceChart() {
   destroyChart('distProvince');
   var ctx = document.getElementById('distProvinceChart');
   if (!ctx) return;
-  var labels = [], counts = [], onlineCounts = [];
+  var labels=[], counts=[], onlineCounts=[];
   var sorted = CHINA_PROVINCES.map(function(p) {
-    var devices = data.assets.filter(function(a) { return findProvince(a.location) === p.name; });
-    return {name:p.name, total:devices.length, online:devices.filter(function(a){return a.status==='在线';}).length};
+    var devices = data.assets.filter(function(a){return findProvince(a.location)===p;});
+    return {name:p,total:devices.length,online:devices.filter(function(a){return a.status==='在线';}).length};
   }).filter(function(p){return p.total>0;}).sort(function(a,b){return b.total-a.total;}).slice(0,10);
-  sorted.forEach(function(p) { labels.push(p.name); counts.push(p.total); onlineCounts.push(p.online); });
+  sorted.forEach(function(p){labels.push(p.name);counts.push(p.total);onlineCounts.push(p.online);});
   chartInstances['distProvince'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {label:'在线',data:onlineCounts,backgroundColor:'#4ade80',borderRadius:2},
-        {label:'离线',data:counts.map(function(t,i){return t-onlineCounts[i];}),backgroundColor:'#334155',borderRadius:2}
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{color:'#99aabb',font:{size:10}}}},
-      scales:{
-        x:{stacked:true,ticks:{color:'#6b7d8e',font:{size:10}},grid:{color:'#2A3440'}},
-        y:{stacked:true,ticks:{color:'#6b7d8e',stepSize:1},grid:{color:'#2A3440'}}
-      }
-    }
+    type:'bar', data:{labels:labels,datasets:[
+      {label:'在线',data:onlineCounts,backgroundColor:'#4ade80',borderRadius:2},
+      {label:'离线',data:counts.map(function(t,i){return t-onlineCounts[i];}),backgroundColor:'#334155',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#99aabb',font:{size:10}}}},scales:{x:{stacked:true,ticks:{color:'#6b7d8e',font:{size:10}},grid:{color:'#2A3440'}},y:{stacked:true,ticks:{color:'#6b7d8e',stepSize:1},grid:{color:'#2A3440'}}}}
   });
 }
 
@@ -1550,18 +1542,15 @@ function renderDistProvinceList() {
   var el = document.getElementById('distProvinceList');
   if (!el) return;
   var sorted = CHINA_PROVINCES.map(function(p) {
-    var devices = data.assets.filter(function(a) { return findProvince(a.location) === p.name; });
-    return {name:p.name, total:devices.length, online:devices.filter(function(a){return a.status==='在线';}).length};
+    var devices = data.assets.filter(function(a){return findProvince(a.location)===p;});
+    return {name:p,total:devices.length,online:devices.filter(function(a){return a.status==='在线';}).length};
   }).filter(function(p){return p.total>0;}).sort(function(a,b){return b.total-a.total;});
-  el.innerHTML = sorted.map(function(p, i) {
-    var rate = p.total ? Math.round(p.online/p.total*100) : 0;
+  el.innerHTML = sorted.map(function(p,i) {
+    var rate = p.total?Math.round(p.online/p.total*100):0;
     return '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #1a2332;cursor:pointer;font-size:12px" onclick="showProvinceDetail(\''+p.name+'\')">' +
-      '<span style="color:#6b7d8e;width:24px">#'+(i+1)+'</span>' +
-      '<span style="flex:1;color:#ccd">'+p.name+'</span>' +
-      '<span style="color:#409EFF;margin-right:12px">'+p.total+'台</span>' +
-      '<span style="color:#4ade80;margin-right:8px">在线'+p.online+'</span>' +
-      '<span style="color:'+(rate>=80?'#4ade80':rate>=50?'#f59e0b':'#ef4444')+'">'+rate+'%</span>' +
-      '</div>';
+      '<span style="color:#6b7d8e;width:24px">#'+(i+1)+'</span><span style="flex:1;color:#ccd">'+p.name+'</span>' +
+      '<span style="color:#409EFF;margin-right:12px">'+p.total+'台</span><span style="color:#4ade80;margin-right:8px">在线'+p.online+'</span>' +
+      '<span style="color:'+(rate>=80?'#4ade80':rate>=50?'#f59e0b':'#ef4444')+'">'+rate+'%</span></div>';
   }).join('') || '<div style="color:#6b7d8e;text-align:center;padding:20px">暂无设备数据</div>';
 }
 

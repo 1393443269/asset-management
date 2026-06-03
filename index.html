@@ -9,6 +9,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=28c194e437e99f8e46c53144444347e3&plugin=AMap.DistrictSearch,AMap.DistrictLayer"></script>
+<script src="https://webapi.amap.com/ui/1.1/main.js"></script>
 <script>
 // Clear old demo data on first load
 if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');console.log('Old demo data cleared');}
@@ -268,20 +270,19 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
       <div class="page" id="page-distribution">
         <div class="card-group" id="distStats"></div>
         <div class="charts-row">
-          <div class="panel" style="position:relative">
-            <h3>全国设备分布 <span style="font-size:12px;color:#6b7d8e;font-weight:400">点击省份查看设备详情</span></h3>
-            <div id="distMap" style="height:480px"></div>
-            <div id="distClickHint" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#ccc;padding:6px 16px;border-radius:12px;font-size:12px;pointer-events:none">👆 点击地图上的省份标记查看该地区设备</div>
+          <div class="panel" style="position:relative;padding:0;overflow:hidden">
+            <div style="position:absolute;top:12px;left:16px;z-index:10;font-size:14px;font-weight:600;color:#e0e6ed">全国设备分布 <span style="font-size:11px;color:#6b7d8e;font-weight:400">点击省份下钻到市</span></div>
+            <div id="distMap" style="width:100%;height:520px"></div>
           </div>
           <div class="panel">
             <h3>📊 省份设备排行</h3>
             <div class="chart-wrap"><canvas id="distProvinceChart"></canvas></div>
-            <div id="distProvinceList" style="max-height:220px;overflow-y:auto;margin-top:8px"></div>
+            <div id="distProvinceList" style="max-height:240px;overflow-y:auto;margin-top:8px"></div>
           </div>
         </div>
         <div id="distDetailPanel" class="panel" style="display:none">
           <h3>📍 <span id="distDetailTitle">区域设备详情</span> <button class="btn btn-outline btn-sm" onclick="closeDistDetail()" style="font-size:11px">✕ 关闭</button></h3>
-          <table><thead><tr><th>设备名称</th><th>型号</th><th>序列号</th><th>状态</th><th>城市</th><th>最后在线</th></tr></thead><tbody id="distDetailBody"></tbody></table>
+          <table><thead><tr><th>设备名称</th><th>型号</th><th>SN</th><th>状态</th><th>位置</th><th>最后在线</th></tr></thead><tbody id="distDetailBody"></tbody></table>
         </div>
       </div>
 

@@ -1426,9 +1426,10 @@ function renderDistStats() {
 function renderDistAmap() {
   var mapEl = document.getElementById('distMap');
   if (!mapEl) return;
+  if (maps['dist']) { maps['dist'].destroy(); delete maps['dist']; }
   mapEl.innerHTML = '';
 
-  var m = L.map('distMap',{zoomControl:true,attributionControl:false}).setView([35,108],5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
+  var m = new AMap.Map('distMap', {
     zoom: 5, center: [108, 35], mapStyle: 'amap://styles/darkblue',
     features: ['bg','road','building','point']
   });
@@ -1462,14 +1463,14 @@ function renderDistAmap() {
     var size = Math.min(32, Math.max(14, pd.total * 7)) + 'px';
 
     // Circle marker
-    var circle = new L.circleMarker({
+    var circle = new AMap.CircleMarker({
       center: pos, radius: Math.min(22, Math.max(8, pd.total * 5)) + 2,
       fillColor: color, fillOpacity: 0.3, strokeColor: color, strokeWeight: 1, zIndex: 10
     });
-    circle.addTo(m);
+    circle.setMap(m);
 
     // Text label
-    var label = L.marker([pos[1],pos[0]],{icon:L.divIcon({className:{
+    var label = new AMap.Text({
       text: name + '\n' + pd.total + '台',
       position: pos, anchor: 'center',
       style: {
@@ -1478,7 +1479,7 @@ function renderDistAmap() {
         'font-size': '12px', 'text-align': 'center', 'white-space': 'nowrap', 'cursor': 'pointer'
       }
     });
-    label.addTo(m);
+    label.setMap(m);
     label.on('click', function() { showProvinceDetail(name); });
   });
 

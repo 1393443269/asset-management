@@ -1,0 +1,16 @@
+/* Professional Distribution Page */
+#page-distribution .card-group{margin-bottom:12px}
+#page-distribution .card{padding:14px 16px}
+#page-distribution .card .num{font-size:24px}
+#distMap{height:520px!important;border-radius:6px;background:#0a1628}
+.dist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dist-header h3{font-size:16px;color:#e0e6ed}
+.dist-fullscreen-btn{background:rgba(64,158,255,0.15);border:1px solid rgba(64,158,255,0.3);color:#409EFF;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:13px;transition:all .2s}
+.dist-fullscreen-btn:hover{background:rgba(64,158,255,0.25)}
+.province-list-item{display:flex;align-items:center;padding:7px 10px;border-bottom:1px solid #1a2332;cursor:pointer;font-size:12px;transition:all .15s}
+.province-list-item:hover{background:rgba(64,158,255,0.08)}
+.province-rank{width:24px;color:#6b7d8e;text-align:center}
+.province-name{flex:1;color:#ccd}
+.province-count{color:#409EFF;margin-right:10px}
+.province-online{color:#4ade80;margin-right:8px}
+.province-rate{font-weight:600}

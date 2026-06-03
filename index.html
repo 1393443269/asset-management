@@ -266,11 +266,23 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
 
       <!-- Distribution Page -->
       <div class="page" id="page-distribution">
+        <div class="card-group" id="distStats"></div>
         <div class="charts-row">
-          <div class="panel"><h3>全国设备分布</h3><div id="distMap"></div></div>
-          <div class="panel"><h3>各省设备数量 <span style="font-size:13px;color:#6b7d8e">Top 10</span></h3><div class="chart-wrap"><canvas id="chartProvince"></canvas></div></div>
+          <div class="panel" style="position:relative">
+            <h3>全国设备分布 <span style="font-size:12px;color:#6b7d8e;font-weight:400">点击省份查看设备详情</span></h3>
+            <div id="distMap" style="height:480px"></div>
+            <div id="distClickHint" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#ccc;padding:6px 16px;border-radius:12px;font-size:12px;pointer-events:none">👆 点击地图上的省份标记查看该地区设备</div>
+          </div>
+          <div class="panel">
+            <h3>📊 省份设备排行</h3>
+            <div class="chart-wrap"><canvas id="distProvinceChart"></canvas></div>
+            <div id="distProvinceList" style="max-height:220px;overflow-y:auto;margin-top:8px"></div>
+          </div>
         </div>
-        <div class="panel"><h3>城市设备排名</h3><table><thead><tr><th>排名</th><th>城市</th><th>省份</th><th>设备数</th><th>在线数</th><th>在线率</th></tr></thead><tbody id="cityRankTable"></tbody></table></div>
+        <div id="distDetailPanel" class="panel" style="display:none">
+          <h3>📍 <span id="distDetailTitle">区域设备详情</span> <button class="btn btn-outline btn-sm" onclick="closeDistDetail()" style="font-size:11px">✕ 关闭</button></h3>
+          <table><thead><tr><th>设备名称</th><th>型号</th><th>序列号</th><th>状态</th><th>城市</th><th>最后在线</th></tr></thead><tbody id="distDetailBody"></tbody></table>
+        </div>
       </div>
 
       <!-- Recharges Page -->

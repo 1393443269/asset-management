@@ -12,15 +12,15 @@ const STORAGE_KEY = 'assethub_v3';
 
 const defaultData = {
   assets: [
-    { id:'a1', name:'GPS定位终端A01', model:'GT-800', sn:'SN-2026-0001', type:'定位终端', mqttTopic:'factory-5gmodem-009', status:'在线', location:'北京市朝阳区', purchaseDate:'2026-01-15', lat:39.9219, lng:116.4435, remark:'正常运作', createdAt:'2026-01-15 10:00' },
-    { id:'a2', name:'GPS定位终端A02', model:'GT-800', sn:'SN-2026-0002', type:'定位终端', mqttTopic:'sensor-temp-001', status:'在线', location:'上海市浦东新区', purchaseDate:'2026-02-10', lat:31.2304, lng:121.4737, remark:'', createdAt:'2026-02-10 14:30' },
-    { id:'a3', name:'GPS定位终端A03', model:'GT-900', sn:'SN-2026-0003', type:'定位终端', mqttTopic:'factory-robot-008', status:'离线', location:'广州市天河区', purchaseDate:'2025-11-20', lat:23.1291, lng:113.2644, remark:'SIM卡欠费', createdAt:'2025-11-20 09:00' },
-    { id:'a4', name:'温湿度传感器B01', model:'TH-200', sn:'SN-2026-0004', type:'传感器', mqttTopic:'warehouse-scanner-004', status:'在线', location:'深圳市南山区', purchaseDate:'2026-03-05', lat:22.5431, lng:113.9432, remark:'仓库监控', createdAt:'2026-03-05 11:00' },
-    { id:'a5', name:'通讯模块C01', model:'CM-500', sn:'SN-2026-0005', type:'通讯模块', mqttTopic:'', status:'在线', location:'杭州市西湖区', purchaseDate:'2026-01-22', lat:30.2741, lng:120.1551, remark:'', createdAt:'2026-01-22 08:30' },
-    { id:'a6', name:'智能控制设备D01', model:'IC-1000', sn:'SN-2026-0006', type:'控制设备', mqttTopic:'factory-5gmodem-009', status:'维修中', location:'成都市武侯区', purchaseDate:'2025-12-01', lat:30.5728, lng:104.0668, remark:'返厂维修中', createdAt:'2025-12-01 15:00' },
-    { id:'a7', name:'网关设备E01', model:'GW-300', sn:'SN-2026-0007', type:'网关设备', mqttTopic:'gateway-hub-007', status:'在线', location:'武汉市洪山区', purchaseDate:'2026-04-10', lat:30.5048, lng:114.4194, remark:'核心网关', createdAt:'2026-04-10 10:00' },
-    { id:'a8', name:'GPS定位终端A04', model:'GT-900', sn:'SN-2026-0008', type:'定位终端', mqttTopic:'sensor-temp-001', status:'在线', location:'南京市鼓楼区', purchaseDate:'2026-05-18', lat:32.0603, lng:118.7969, remark:'', createdAt:'2026-05-18 13:00' },
-    { id:'a9', name:'温湿度传感器B02', model:'TH-200', sn:'SN-2026-0009', type:'传感器', mqttTopic:'warehouse-scanner-004', status:'离线', location:'重庆市渝北区', purchaseDate:'2026-02-28', lat:29.6018, lng:106.5445, remark:'需现场检查', createdAt:'2026-02-28 16:00' }
+    { id:'a1', name:'GPS定位终端A01', model:'GT-800', sn:'SN-2026-0001', type:'定位终端', comPort:'COM4', status:'在线', location:'北京市朝阳区', purchaseDate:'2026-01-15', lat:39.9219, lng:116.4435, remark:'正常运作', createdAt:'2026-01-15 10:00' },
+    { id:'a2', name:'GPS定位终端A02', model:'GT-800', sn:'SN-2026-0002', type:'定位终端', comPort:'COM5', status:'在线', location:'上海市浦东新区', purchaseDate:'2026-02-10', lat:31.2304, lng:121.4737, remark:'', createdAt:'2026-02-10 14:30' },
+    { id:'a3', name:'GPS定位终端A03', model:'GT-900', sn:'SN-2026-0003', type:'定位终端', comPort:'COM8', status:'离线', location:'广州市天河区', purchaseDate:'2025-11-20', lat:23.1291, lng:113.2644, remark:'SIM卡欠费', createdAt:'2025-11-20 09:00' },
+    { id:'a4', name:'温湿度传感器B01', model:'TH-200', sn:'SN-2026-0004', type:'传感器', comPort:'COM13', status:'在线', location:'深圳市南山区', purchaseDate:'2026-03-05', lat:22.5431, lng:113.9432, remark:'仓库监控', createdAt:'2026-03-05 11:00' },
+    { id:'a5', name:'通讯模块C01', model:'CM-500', sn:'SN-2026-0005', type:'通讯模块', comPort:'', status:'在线', location:'杭州市西湖区', purchaseDate:'2026-01-22', lat:30.2741, lng:120.1551, remark:'', createdAt:'2026-01-22 08:30' },
+    { id:'a6', name:'智能控制设备D01', model:'IC-1000', sn:'SN-2026-0006', type:'控制设备', comPort:'COM4', status:'维修中', location:'成都市武侯区', purchaseDate:'2025-12-01', lat:30.5728, lng:104.0668, remark:'返厂维修中', createdAt:'2025-12-01 15:00' },
+    { id:'a7', name:'网关设备E01', model:'GW-300', sn:'SN-2026-0007', type:'网关设备', comPort:'COM7', status:'在线', location:'武汉市洪山区', purchaseDate:'2026-04-10', lat:30.5048, lng:114.4194, remark:'核心网关', createdAt:'2026-04-10 10:00' },
+    { id:'a8', name:'GPS定位终端A04', model:'GT-900', sn:'SN-2026-0008', type:'定位终端', comPort:'COM5', status:'在线', location:'南京市鼓楼区', purchaseDate:'2026-05-18', lat:32.0603, lng:118.7969, remark:'', createdAt:'2026-05-18 13:00' },
+    { id:'a9', name:'温湿度传感器B02', model:'TH-200', sn:'SN-2026-0009', type:'传感器', comPort:'COM13', status:'离线', location:'重庆市渝北区', purchaseDate:'2026-02-28', lat:29.6018, lng:106.5445, remark:'需现场检查', createdAt:'2026-02-28 16:00' }
   ],
   sims: [
     { id:'s1', iccid:'8986012185100000001', imsi:'460011234567890', operator:'中国移动', plan:'30GB/月', balance:86.50, status:'正常', deviceId:'a1', createdAt:'2026-01-15 10:00' },
@@ -54,7 +54,7 @@ const defaultData = {
     { id:'al5', severity:'warning', title:'数据上报异常', desc:'温湿度传感器B02 在重庆渝北区数据上报中断', status:'active', createdAt:'2026-06-02 18:00' }
   ],
   activities: [
-    { id:'act1', action:'设备上线', detail:'GPS定位终端A01 通过MQTT Broker上线', time:'2026-06-03 10:35' },
+    { id:'act1', action:'设备上线', detail:'GPS定位终端A01 通过COM4端口上线', time:'2026-06-03 10:35' },
     { id:'act2', action:'SIM充值', detail:'为ICCID 8986012185100000001 充值100元', time:'2026-06-03 09:20' },
     { id:'act3', action:'告警触发', detail:'设备A03离线告警已触发', time:'2026-06-03 08:00' },
     { id:'act4', action:'系统备份', detail:'手动备份所有数据完成', time:'2026-06-02 17:00' },
@@ -62,14 +62,14 @@ const defaultData = {
     { id:'act6', action:'围栏更新', detail:'更新电子围栏"北京仓库区"范围', time:'2026-06-01 15:30' }
   ],
   commandHistory: [
-    { id:'ch1', time:'2026-06-03 10:30', device:'GPS定位终端A01', mqttTopic:'factory-5gmodem-009', command:'AT', result:'成功', response:'OK\r\n+CSQ: 28,99' },
-    { id:'ch2', time:'2026-06-03 10:15', device:'GPS定位终端A02', mqttTopic:'sensor-temp-001', command:'CSQ', result:'成功', response:'+CSQ: 22,99' },
-    { id:'ch3', time:'2026-06-02 16:00', device:'GPS定位终端A01', mqttTopic:'factory-5gmodem-009', command:'LOCATE', result:'成功', response:'+LOC: 39.9219,116.4435' }
+    { id:'ch1', time:'2026-06-03 10:30', device:'GPS定位终端A01', comPort:'COM4', command:'AT', result:'成功', response:'OK\r\n+CSQ: 28,99' },
+    { id:'ch2', time:'2026-06-03 10:15', device:'GPS定位终端A02', comPort:'COM5', command:'CSQ', result:'成功', response:'+CSQ: 22,99' },
+    { id:'ch3', time:'2026-06-02 16:00', device:'GPS定位终端A01', comPort:'COM4', command:'LOCATE', result:'成功', response:'+LOC: 39.9219,116.4435' }
   ],
   settings: {
     platformName: 'Asset Management',
     refreshInterval: 30,
-    mqttMonitor: true
+    comDetect: true
   },
   profile: {
     username: 'admin',
@@ -271,13 +271,13 @@ function renderDashboard() {
   var online = assets.filter(function(a) { return a.status === '在线'; }).length;
   var offline = assets.filter(function(a) { return a.status === '离线'; }).length;
   var repairing = assets.filter(function(a) { return a.status === '维修中'; }).length;
-  var comDevices = assets.filter(function(a) { return a.mqttTopic && a.mqttTopic.trim(); }).length;
+  var comDevices = assets.filter(function(a) { return a.comPort && a.comPort.trim(); }).length;
 
   var cardsHtml = [
     { label: '资产总数', num: total, change: '共 ' + total + ' 台设备', cls: 'info' },
     { label: '在线设备', num: online, change: '↑ ' + (total ? Math.round(online/total*100) : 0) + '% 在线率', cls: 'up' },
     { label: '离线设备', num: offline, change: '↓ ' + offline + ' 台需关注', cls: 'down' },
-    { label: 'MQTT主题设备', num: comDevices, change: '共 ' + comDevices + ' 台IoT设备', cls: 'info' }
+    { label: 'COM端口设备', num: comDevices, change: '共 ' + comDevices + ' 台串口设备', cls: 'info' }
   ].map(function(c) {
     return '<div class="card"><div class="label">' + c.label + '</div><div class="num">' + c.num + '</div><div class="change ' + c.cls + '">' + c.change + '</div></div>';
   }).join('');
@@ -397,19 +397,19 @@ function renderAssetTable() {
   var tbody = document.querySelector('#assetTable tbody');
   if (!tbody) return;
   var html = filtered.map(function(a) {
-    var mqttTopicHtml = a.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '<span style="color:#556677">-</span>';
+    var comPortHtml = a.comPort ? '<span class="com-port-badge">' + escapeHtml(a.comPort) + '</span>' : '<span style="color:#556677">-</span>';
     return '<tr>' +
       '<td><strong>' + escapeHtml(a.name) + '</strong></td>' +
       '<td>' + escapeHtml(a.model) + '</td>' +
       '<td style="font-family:monospace;font-size:12px">' + escapeHtml(a.sn) + '</td>' +
       '<td>' + escapeHtml(a.type) + '</td>' +
-      '<td>' + mqttTopicHtml + '</td>' +
+      '<td>' + comPortHtml + '</td>' +
       '<td>' + statusBadge(a.status) + '</td>' +
       '<td>' + escapeHtml(a.location) + '</td>' +
       '<td>' + fmtDate(a.purchaseDate) + '</td>' +
       '<td>' +
         '<button class="btn btn-outline btn-sm" onclick="editAsset(\'' + a.id + '\')" title="编辑">✎</button> ' +
-        '<button class="btn btn-outline btn-sm" onclick="testMqttDevice(\'' + a.id + '\')" title="测试MQTT主题" ' + (a.mqttTopic ? '' : 'disabled style="opacity:0.4"') + '>⚡</button> ' +
+        '<button class="btn btn-outline btn-sm" onclick="testComPort(\'' + a.id + '\')" title="测试COM端口" ' + (a.comPort ? '' : 'disabled style="opacity:0.4"') + '>⚡</button> ' +
         '<button class="btn btn-danger btn-sm" onclick="deleteAsset(\'' + a.id + '\')" title="删除">✕</button>' +
       '</td>' +
     '</tr>';
@@ -427,7 +427,7 @@ function openAssetModal(id) {
   document.getElementById('assetModel').value = '';
   document.getElementById('assetSn').value = '';
   document.getElementById('assetType').value = '定位终端';
-  document.getElementById('assetMqttTopic').value = '';
+  document.getElementById('assetComPort').value = '';
   document.getElementById('assetStatus').value = '在线';
   document.getElementById('assetLocation').value = '';
   document.getElementById('assetPurchaseDate').value = '';
@@ -444,7 +444,7 @@ function openAssetModal(id) {
       document.getElementById('assetModel').value = a.model;
       document.getElementById('assetSn').value = a.sn;
       document.getElementById('assetType').value = a.type;
-      document.getElementById('assetMqttTopic').value = a.mqttTopic || '';
+      document.getElementById('assetComPort').value = a.comPort || '';
       document.getElementById('assetStatus').value = a.status;
       document.getElementById('assetLocation').value = a.location || '';
       document.getElementById('assetPurchaseDate').value = a.purchaseDate || '';
@@ -475,7 +475,7 @@ function saveAsset() {
     model: model,
     sn: sn,
     type: document.getElementById('assetType').value,
-    mqttTopic: document.getElementById('assetMqttTopic').value.trim(),
+    comPort: document.getElementById('assetComPort').value.trim(),
     status: document.getElementById('assetStatus').value,
     location: document.getElementById('assetLocation').value.trim(),
     purchaseDate: document.getElementById('assetPurchaseDate').value,
@@ -526,18 +526,18 @@ function batchDeleteAssets() {
   });
 }
 
-function testMqttDevice(id) {
+function testComPort(id) {
   var a = data.assets.find(function(x) { return x.id === id; });
-  if (!a || !a.mqttTopic) { showToast('该设备没有配置MQTT主题', 'error'); return; }
-  showToast('正在测试 ' + a.mqttTopic + ' MQTT通讯...', 'info');
+  if (!a || !a.comPort) { showToast('该设备没有配置COM端口', 'error'); return; }
+  showToast('正在测试 ' + a.comPort + ' 端口通讯...', 'info');
   setTimeout(function() {
     var success = Math.random() > 0.3;
     if (success) {
-      showToast(a.mqttTopic + ' MQTT通讯正常，响应: OK', 'success');
-      addActivity('MQTT检测', a.name + ' ' + a.mqttTopic + ' MQTT测试通过');
+      showToast(a.comPort + ' 端口通讯正常，响应: OK', 'success');
+      addActivity('COM测试', a.name + ' ' + a.comPort + ' 端口测试通过');
     } else {
-      showToast(a.mqttTopic + ' MQTT通讯失败，请检查连接', 'error');
-      addActivity('MQTT检测', a.name + ' ' + a.mqttTopic + ' MQTT测试失败');
+      showToast(a.comPort + ' 端口通讯失败，请检查连接', 'error');
+      addActivity('COM测试', a.name + ' ' + a.comPort + ' 端口测试失败');
     }
     saveData();
   }, 1200);
@@ -546,29 +546,29 @@ function testMqttDevice(id) {
 // ============================================================
 // 8. COM PORT DETECTION
 // ============================================================
-function checkMqttDevices() {
-  showToast('正在扫描MQTT主题...', 'info');
-  var ports = ['sensor-temp-001','warehouse-scanner-004','factory-robot-008','factory-5gmodem-009'];
+function detectComPorts() {
+  showToast('正在扫描COM端口...', 'info');
+  var ports = ['COM4', 'COM5', 'COM7', 'COM8', 'COM13'];
   var results = [];
   setTimeout(function() {
     ports.forEach(function(p) {
       var available = true;
-      if (p === 'gateway-hub-007') available = Math.random() > 0.5;
+      if (p === 'COM7') available = Math.random() > 0.5;
       results.push({ port: p, available: available });
     });
     var found = results.filter(function(r) { return r.available; });
-    var msg = 'MQTT设备发现：找到 ' + found.length + ' 个在线设备 (' + found.map(function(r) { return r.topic; }).join(', ') + ')';
+    var msg = 'COM端口扫描完成：发现 ' + found.length + ' 个可用端口 (' + found.map(function(r) { return r.port; }).join(', ') + ')';
     showToast(msg, 'success');
-    addActivity('MQTT检测', msg);
+    addActivity('端口检测', msg);
 
     // If on commands page, update com port input
-    var cmdTopic = document.getElementById('cmdTopic');
-    if (cmdTopic && found.length > 0) {
-      cmdTopic.value = found[0].port;
+    var cmdComPort = document.getElementById('cmdComPort');
+    if (cmdComPort && found.length > 0) {
+      cmdComPort.value = found[0].port;
     }
 
     // If on monitor page, update com status
-    if (currentPage === 'monitor') renderMqttStatus(results);
+    if (currentPage === 'monitor') renderMonitorComStatus(results);
 
     // If on assets page, highlight com devices
     if (currentPage === 'assets') {
@@ -579,19 +579,19 @@ function checkMqttDevices() {
   }, 1500);
 }
 
-function renderMqttStatus(scanResults) {
-  var container = document.getElementById('mqttStatus');
+function renderMonitorComStatus(scanResults) {
+  var container = document.getElementById('comStatus');
   if (!container) return;
   var ports = scanResults || [
-    { port: 'sensor-temp-001', available: true },
-    { port: 'warehouse-scanner-004', available: true },
-    { port: 'gateway-hub-007', available: false },
-    { port: 'factory-robot-008', available: true },
-    { port: 'factory-5gmodem-009', available: true }
+    { port: 'COM4', available: true },
+    { port: 'COM5', available: true },
+    { port: 'COM7', available: false },
+    { port: 'COM8', available: true },
+    { port: 'COM13', available: true }
   ];
   var html = '<div class="stat-mini-row">';
   ports.forEach(function(p) {
-    var devices = data.assets.filter(function(a) { return a.mqttTopic === p.port; });
+    var devices = data.assets.filter(function(a) { return a.comPort === p.port; });
     var cls = p.available ? 'green' : '';
     var label = p.available ? '在线' : '不可用';
     html += '<div class="stat-mini"><div class="stat-mini-label">' + p.port + ' (' + label + ')</div>' +
@@ -889,7 +889,7 @@ function renderRechargeStatsChart(records) {
 // ============================================================
 function renderMonitor() {
   renderMonitorMap();
-  renderMqttStatus();
+  renderMonitorComStatus();
   renderOnlineTable();
 }
 
@@ -914,7 +914,7 @@ function updateMonitorMarkers(m) {
       var color = a.status === '在线' ? '#4ade80' : a.status === '维修中' ? '#f59e0b' : '#ef4444';
       var popupContent = '<b>' + escapeHtml(a.name) + '</b><br>型号: ' + escapeHtml(a.model) +
         '<br>序列号: ' + escapeHtml(a.sn) + '<br>状态: ' + a.status +
-        '<br>MQTT设备: ' + (a.mqttTopic || '无') + '<br>位置: ' + escapeHtml(a.location);
+        '<br>COM端口: ' + (a.comPort || '无') + '<br>位置: ' + escapeHtml(a.location);
       L.circleMarker([parseFloat(a.lat), parseFloat(a.lng)], {
         radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9
       }).addTo(m).bindPopup(popupContent);
@@ -928,12 +928,12 @@ function renderOnlineTable() {
   var tbody = document.getElementById('onlineTable');
   if (!tbody) return;
   var html = onlineAssets.map(function(a) {
-    var signalLevel = a.mqttTopic ? Math.floor(Math.random() * 31).toString() : 'N/A';
-    var signalPct = a.mqttTopic ? Math.min(100, Math.round(parseInt(signalLevel || 0) / 31 * 100)) : 0;
+    var signalLevel = a.comPort ? Math.floor(Math.random() * 31).toString() : 'N/A';
+    var signalPct = a.comPort ? Math.min(100, Math.round(parseInt(signalLevel || 0) / 31 * 100)) : 0;
     return '<tr>' +
       '<td>' + escapeHtml(a.name) + '</td>' +
-      '<td>' + (a.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(a.mqttTopic) + '</span>' : '-') + '</td>' +
-      '<td>' + (a.mqttTopic ? signalLevel + ' (' + signalPct + '%)' : '-') + '</td>' +
+      '<td>' + (a.comPort ? '<span class="com-port-badge">' + escapeHtml(a.comPort) + '</span>' : '-') + '</td>' +
+      '<td>' + (a.comPort ? signalLevel + ' (' + signalPct + '%)' : '-') + '</td>' +
       '<td>' + now() + '</td>' +
     '</tr>';
   }).join('');
@@ -1183,7 +1183,7 @@ function renderCommandsPage() {
   if (!select) return;
   var html = '<option value="">选择设备...</option>';
   data.assets.forEach(function(a) {
-    html += '<option value="' + a.id + '">' + escapeHtml(a.name) + (a.mqttTopic ? ' (' + a.mqttTopic + ')' : '') + '</option>';
+    html += '<option value="' + a.id + '">' + escapeHtml(a.name) + (a.comPort ? ' (' + a.comPort + ')' : '') + '</option>';
   });
   select.innerHTML = html;
 
@@ -1199,7 +1199,7 @@ function renderCommandHistory() {
     return '<tr>' +
       '<td>' + h.time + '</td>' +
       '<td>' + escapeHtml(h.device) + '</td>' +
-      '<td>' + (h.mqttTopic ? '<span class="mqtt-badge">' + escapeHtml(h.mqttTopic) + '</span>' : '-') + '</td>' +
+      '<td>' + (h.comPort ? '<span class="com-port-badge">' + escapeHtml(h.comPort) + '</span>' : '-') + '</td>' +
       '<td><strong>' + escapeHtml(h.command) + '</strong></td>' +
       '<td><span style="' + resultCls + '">' + h.result + '</span></td>' +
       '<td style="font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escapeHtml(h.response) + '">' + escapeHtml(h.response) + '</td>' +
@@ -1210,16 +1210,16 @@ function renderCommandHistory() {
 
 function sendCommand(cmd) {
   var deviceId = document.getElementById('cmdDevice').value;
-  var mqttTopic = document.getElementById('cmdTopic').value.trim();
+  var comPort = document.getElementById('cmdComPort').value.trim();
 
   if (!deviceId) { showToast('请选择目标设备', 'error'); return; }
-  if (!mqttTopic) { showToast('请输入MQTT主题', 'error'); return; }
+  if (!comPort) { showToast('请输入COM端口', 'error'); return; }
 
   var device = data.assets.find(function(a) { return a.id === deviceId; });
   if (!device) { showToast('设备不存在', 'error'); return; }
 
   document.getElementById('cmdResult').style.display = 'block';
-  document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">MQTT Publish: devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+  document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">正在向 ' + escapeHtml(device.name) + ' (' + comPort + ') 发送 ' + cmd + ' 指令...</span>';
 
   // Simulated responses
   var responses = {
@@ -1246,13 +1246,13 @@ function sendCommand(cmd) {
       id: 'ch' + Date.now(),
       time: now(),
       device: device.name,
-      mqttTopic: mqttTopic,
+      comPort: comPort,
       command: cmd,
       result: result,
       response: response
     });
     if (data.commandHistory.length > 200) data.commandHistory = data.commandHistory.slice(-200);
-    addActivity('MQTT指令', 'Pub devices/' + mqttTopic + '/cmd ' + cmd + ' -> ' + device.name + ' [' + result + ']');
+    addActivity('指令下发', cmd + ' -> ' + device.name + ' (' + comPort + ') ' + result);
     saveData();
     renderCommandHistory();
   }, 1500);
@@ -1654,21 +1654,19 @@ function changePassword() {
 function renderSettings() {
   document.getElementById('setPlatformName').value = data.settings.platformName || 'Asset Management';
   document.getElementById('setRefreshInterval').value = data.settings.refreshInterval || 30;
-  document.getElementById('setMqttBroker').value = data.settings.mqttBroker || 'broker.emqx.io';
-  document.getElementById('setMqttPort').value = data.settings.mqttPort || 1883;
-  document.getElementById('setMqttMonitor').checked = data.settings.mqttMonitor !== false;
+  document.getElementById('setComDetect').checked = data.settings.comDetect !== false;
 }
 
 function saveSettings() {
   data.settings.platformName = document.getElementById('setPlatformName').value.trim() || 'Asset Management';
   data.settings.refreshInterval = parseInt(document.getElementById('setRefreshInterval').value) || 30;
-  data.settings.mqttBroker = document.getElementById('setMqttBroker').value.trim() || 'broker.emqx.io';
-  data.settings.mqttPort = parseInt(document.getElementById('setMqttPort').value) || 1883;
-  data.settings.mqttMonitor = document.getElementById('setMqttMonitor').checked;
+  data.settings.comDetect = document.getElementById('setComDetect').checked;
+
+  // Update platform title
   document.title = data.settings.platformName + ' - 智能资产管理平台';
-  addOpLog('设置修改', 'MQTT Broker: ' + data.settings.mqttBroker + ':' + data.settings.mqttPort);
+  addOpLog('设置修改', '更新系统设置');
   saveData();
-  showToast('系统设置已保存 (MQTT: ' + data.settings.mqttBroker + ':' + data.settings.mqttPort + ')', 'success');
+  showToast('系统设置已保存', 'success');
 }
 
 // ============================================================
@@ -1718,9 +1716,9 @@ function handleGlobalSearch(e) {
 // ============================================================
 function exportExcel() {
   var csv = '﻿'; // BOM for Chinese
-  csv += '设备名称,型号,序列号,类型,MQTT主题,状态,位置,采购日期,备注\r\n';
+  csv += '设备名称,型号,序列号,类型,COM端口,状态,位置,采购日期,备注\r\n';
   data.assets.forEach(function(a) {
-    csv += [a.name, a.model, a.sn, a.type, a.mqttTopic || '', a.status, a.location || '', a.purchaseDate || '', a.remark || ''].map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',') + '\r\n';
+    csv += [a.name, a.model, a.sn, a.type, a.comPort || '', a.status, a.location || '', a.purchaseDate || '', a.remark || ''].map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',') + '\r\n';
   });
 
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -1817,8 +1815,8 @@ window.saveAsset = saveAsset;
 window.editAsset = editAsset;
 window.deleteAsset = deleteAsset;
 window.batchDeleteAssets = batchDeleteAssets;
-window.testMqttDevice = testMqttDevice;
-window.checkMqttDevices = checkMqttDevices;
+window.testComPort = testComPort;
+window.detectComPorts = detectComPorts;
 window.openSimModal = openSimModal;
 window.closeSimModal = closeSimModal;
 window.saveSim = saveSim;

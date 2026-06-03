@@ -331,7 +331,8 @@ function renderDashboard() {
 function renderDashMap() {
   setTimeout(function() {
     var mapEl = document.getElementById('dashMap');
-    if (!mapEl || mapEl._leaflet_id) return;
+    if (!mapEl) return;
+    if (maps['dash']) { maps['dash'].remove(); delete maps['dash']; }
     var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
     var centerLat = 35.86, centerLng = 104.19, zoom = 5;
     if (assetsWithPos.length === 1) {
@@ -872,7 +873,8 @@ function renderMonitor() {
 function renderMonitorMap() {
   setTimeout(function() {
     var mapEl = document.getElementById('map');
-    if (!mapEl || mapEl._leaflet_id) return;
+    if (!mapEl) return;
+    if (maps['main']) { maps['main'].remove(); delete maps['main']; }
     var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
     var centerLat = 35.86, centerLng = 104.19, zoom = 5;
     if (assetsWithPos.length === 1) {
@@ -1438,9 +1440,12 @@ function renderDistStats() {
 
 function renderDistMap() {
   var mapEl = document.getElementById('distMap');
-  if (!mapEl || mapEl._distRendered) return;
-  mapEl._distRendered = true;
+  if (!mapEl) return;
+  // Always destroy old map to allow re-render
   if (maps['dist']) { maps['dist'].remove(); delete maps['dist']; }
+  if (mapEl._leaflet_id) { var old = L.map(mapEl); old.remove(); }
+  mapEl._distRendered = undefined;
+  delete mapEl._distRendered;
   var m = L.map('distMap', {zoomControl: true}).setView([35.86, 104.19], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18}).addTo(m);
 
@@ -1790,8 +1795,8 @@ function renderBigScreen() {
 
 function renderBsMap() {
   var mapEl = document.getElementById('bsMap');
-  if (!mapEl || mapEl._bsRendered) return;
-  mapEl._bsRendered = true;
+  if (!mapEl) return;
+  if (bsMap) { bsMap.remove(); bsMap = null; }
   setTimeout(function() {
     var assetsWithPos = data.assets.filter(function(a) { return a.lat && a.lng; });
     if (!assetsWithPos.length) return;

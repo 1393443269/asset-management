@@ -1,5 +1,5 @@
 /**
- * AssetHub Pro - 智能资产管理平台
+ * Asset Management - 智能资产管理平台
  * app.js - Application logic, data layer, and UI rendering
  */
 (function() {
@@ -67,7 +67,7 @@ const defaultData = {
     { id:'ch3', time:'2026-06-02 16:00', device:'GPS定位终端A01', comPort:'COM4', command:'LOCATE', result:'成功', response:'+LOC: 39.9219,116.4435' }
   ],
   settings: {
-    platformName: 'AssetHub Pro',
+    platformName: 'Asset Management',
     refreshInterval: 30,
     comDetect: true
   },
@@ -1652,13 +1652,13 @@ function changePassword() {
 // 20. SYSTEM SETTINGS
 // ============================================================
 function renderSettings() {
-  document.getElementById('setPlatformName').value = data.settings.platformName || 'AssetHub Pro';
+  document.getElementById('setPlatformName').value = data.settings.platformName || 'Asset Management';
   document.getElementById('setRefreshInterval').value = data.settings.refreshInterval || 30;
   document.getElementById('setComDetect').checked = data.settings.comDetect !== false;
 }
 
 function saveSettings() {
-  data.settings.platformName = document.getElementById('setPlatformName').value.trim() || 'AssetHub Pro';
+  data.settings.platformName = document.getElementById('setPlatformName').value.trim() || 'Asset Management';
   data.settings.refreshInterval = parseInt(document.getElementById('setRefreshInterval').value) || 30;
   data.settings.comDetect = document.getElementById('setComDetect').checked;
 
@@ -1784,7 +1784,7 @@ function restoreData(input) {
 function init() {
   loadData();
   // Apply settings
-  document.title = (data.settings.platformName || 'AssetHub Pro') + ' - 智能资产管理平台';
+  document.title = (data.settings.platformName || 'Asset Management') + ' - 智能资产管理平台';
 
   // Render initial page
   switchPage('dashboard');

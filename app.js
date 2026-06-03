@@ -1218,8 +1218,18 @@ function sendCommand(cmd) {
   var device = data.assets.find(function(a) { return a.id === deviceId; });
   if (!device) { showToast('设备不存在', 'error'); return; }
 
-  document.getElementById('cmdResult').style.display = 'block';
-  document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">MQTT Publish: devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+  // Try real MQTT publish first
+  if (mqttClient && mqttConnected) {
+    var realSent = publishMqttCommand(mqttTopic, cmd, { device: device.name });
+    if (realSent) {
+      document.getElementById('cmdResult').style.display = 'block';
+      document.getElementById('cmdResult').innerHTML = '<span style="color:#4ade80">MQTT Pub ✓ devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+      showToast('MQTT指令已发送: ' + cmd + ' → ' + mqttTopic, 'success');
+    }
+  } else {
+    document.getElementById('cmdResult').style.display = 'block';
+    document.getElementById('cmdResult').innerHTML = '<span style="color:#f59e0b">MQTT离线(模拟) Publish: devices/' + escapeHtml(mqttTopic) + '/cmd {' + cmd + '} → ' + escapeHtml(device.name) + '</span>';
+  }
 
   // Simulated responses
   var responses = {
@@ -1656,6 +1666,7 @@ function renderSettings() {
   document.getElementById('setRefreshInterval').value = data.settings.refreshInterval || 30;
   document.getElementById('setMqttBroker').value = data.settings.mqttBroker || 'broker.emqx.io';
   document.getElementById('setMqttPort').value = data.settings.mqttPort || 1883;
+  document.getElementById('setMqttWsPort').value = data.settings.mqttWsPort || 8084;
   document.getElementById('setMqttMonitor').checked = data.settings.mqttMonitor !== false;
 }
 
@@ -1664,11 +1675,15 @@ function saveSettings() {
   data.settings.refreshInterval = parseInt(document.getElementById('setRefreshInterval').value) || 30;
   data.settings.mqttBroker = document.getElementById('setMqttBroker').value.trim() || 'broker.emqx.io';
   data.settings.mqttPort = parseInt(document.getElementById('setMqttPort').value) || 1883;
+  data.settings.mqttWsPort = parseInt(document.getElementById('setMqttWsPort').value) || 8084;
   data.settings.mqttMonitor = document.getElementById('setMqttMonitor').checked;
   document.title = data.settings.platformName + ' - 智能资产管理平台';
-  addOpLog('设置修改', 'MQTT Broker: ' + data.settings.mqttBroker + ':' + data.settings.mqttPort);
+  addOpLog('设置修改', 'MQTT Broker: ' + data.settings.mqttBroker + ':' + data.settings.mqttPort + ' (WS:' + data.settings.mqttWsPort + ')');
   saveData();
-  showToast('系统设置已保存 (MQTT: ' + data.settings.mqttBroker + ':' + data.settings.mqttPort + ')', 'success');
+  showToast('设置已保存 (MQTT ' + data.settings.mqttBroker + ')', 'success');
+  // Reconnect with new settings
+  if (mqttClient && mqttConnected) { mqttClient.disconnect(); mqttConnected = false; }
+  if (data.settings.mqttMonitor !== false) setTimeout(connectMqttBroker, 1000);
 }
 
 // ============================================================
@@ -1783,13 +1798,171 @@ function restoreData(input) {
 // ============================================================
 // 24. INITIALIZATION
 // ============================================================
+// ============================================================
+// MQTT REAL CONNECTION (Paho MQTT.js over WebSocket)
+// ============================================================
+var mqttClient = null;
+var mqttConnected = false;
+
+function connectMqttBroker() {
+  if (typeof Paho === 'undefined') {
+    console.log('Paho MQTT not loaded, using simulated mode');
+    updateMqttStatusBadge(false);
+    return;
+  }
+  var broker = data.settings.mqttBroker || 'broker.emqx.io';
+  var wsPort = data.settings.mqttWsPort || 8084;
+  var clientId = 'asset-mgmt-' + Math.random().toString(36).substr(2, 8);
+
+  try {
+    mqttClient = new Paho.MQTT.Client(broker, wsPort, '/mqtt', clientId);
+    mqttClient.onConnectionLost = function(resp) {
+      console.log('MQTT disconnected:', resp.errorMessage);
+      mqttConnected = false;
+      updateMqttStatusBadge(false);
+      // Auto-reconnect after 5s
+      setTimeout(function() {
+        if (!mqttConnected) connectMqttBroker();
+      }, 5000);
+    };
+
+    mqttClient.onMessageArrived = function(msg) {
+      var payload = msg.payloadString;
+      var topic = msg.destinationName;
+      console.log('MQTT RX [' + topic + ']:', payload);
+      handleMqttMessage(topic, payload);
+    };
+
+    mqttClient.connect({
+      onSuccess: function() {
+        console.log('MQTT connected to ' + broker + ':' + wsPort);
+        mqttConnected = true;
+        updateMqttStatusBadge(true);
+        subscribeDeviceTopics();
+        showToast('MQTT Broker已连接: ' + broker, 'success');
+        addActivity('MQTT连接', '已连接 ' + broker + ':' + wsPort + ' (WebSocket)');
+      },
+      onFailure: function(err) {
+        console.log('MQTT connection failed:', err.errorMessage);
+        mqttConnected = false;
+        updateMqttStatusBadge(false);
+        // Try alternative ports if main one fails
+        if (wsPort === 8084) {
+          console.log('Retrying with port 8083...');
+          data.settings.mqttWsPort = 8083;
+          setTimeout(connectMqttBroker, 2000);
+        }
+      },
+      userName: '',
+      password: '',
+      keepAliveInterval: 60,
+      cleanSession: true,
+      timeout: 10,
+      useSSL: wsPort === 8084
+    });
+  } catch(e) {
+    console.log('MQTT init error:', e.message);
+    updateMqttStatusBadge(false);
+  }
+}
+
+function subscribeDeviceTopics() {
+  if (!mqttClient || !mqttConnected) return;
+
+  // Subscribe to all device status topics
+  var devices = data.assets.filter(function(a) { return a.mqttTopic; });
+  devices.forEach(function(d) {
+    var statusTopic = 'devices/' + d.mqttTopic + '/status';
+    var telemetryTopic = 'devices/' + d.mqttTopic + '/telemetry';
+    mqttClient.subscribe(statusTopic, { qos: 1 });
+    mqttClient.subscribe(telemetryTopic, { qos: 1 });
+    console.log('MQTT Sub:', statusTopic, telemetryTopic);
+  });
+
+  // Also subscribe to wildcard
+  mqttClient.subscribe('devices/+/status', { qos: 1 });
+  mqttClient.subscribe('devices/+/online', { qos: 1 });
+  console.log('MQTT subscribed to ' + (devices.length * 2) + ' device topics');
+}
+
+function handleMqttMessage(topic, payload) {
+  // Parse topic: devices/{mqttTopic}/status or /telemetry
+  var parts = topic.split('/');
+  if (parts.length < 3) return;
+  var deviceTopic = parts[1];
+
+  // Find matching device
+  var device = data.assets.find(function(a) { return a.mqttTopic === deviceTopic; });
+  if (!device) {
+    // Try by name or other matching
+    device = data.assets.find(function(a) { return a.mqttTopic && topic.indexOf(a.mqttTopic) >= 0; });
+  }
+  if (!device) return;
+
+  try {
+    var data2 = JSON.parse(payload);
+    device.status = 'online';
+    device.lastOnline = now();
+    if (data2.rssi) device.rssi = data2.rssi;
+    if (data2.lat && data2.lng) { device.lat = data2.lat; device.lng = data2.lng; }
+    if (data2.battery) device.battery = data2.battery;
+  } catch(e) {
+    // Plain text payload - just mark as online
+    device.status = 'online';
+    device.lastOnline = now();
+  }
+
+  saveData();
+
+  // Update UI if on relevant pages
+  if (currentPage === 'monitor') {
+    renderOnlineTable();
+    updateMonitorMarkers();
+  }
+  if (currentPage === 'dashboard') renderDashboard();
+  if (currentPage === 'assets') renderAssetTable();
+}
+
+function publishMqttCommand(deviceTopic, cmd, params) {
+  if (!mqttClient || !mqttConnected) {
+    showToast('MQTT未连接，无法发送指令', 'error');
+    return false;
+  }
+  var msg = JSON.stringify({ cmd: cmd, params: params || {}, ts: Date.now() });
+  var topic = 'devices/' + deviceTopic + '/cmd';
+  var mqttMsg = new Paho.MQTT.Message(msg);
+  mqttMsg.destinationName = topic;
+  mqttMsg.qos = 1;
+  mqttMsg.retained = false;
+  mqttClient.send(mqttMsg);
+  console.log('MQTT TX [' + topic + ']:', msg);
+  return true;
+}
+
+function updateMqttStatusBadge(connected) {
+  var badge = document.getElementById('mqttStatusBadge');
+  if (!badge) return;
+  if (connected) {
+    badge.innerHTML = '<span class="status online"><span class="status-dot"></span>MQTT已连接</span>';
+  } else {
+    badge.innerHTML = '<span class="status offline"><span class="status-dot"></span>MQTT离线(模拟)</span>';
+  }
+}
+
 function init() {
   loadData();
-  // Apply settings
   document.title = (data.settings.platformName || 'Asset Management') + ' - 智能资产管理平台';
+
+  // Ensure MQTT WebSocket port is set
+  if (!data.settings.mqttWsPort) data.settings.mqttWsPort = 8084;
 
   // Render initial page
   switchPage('dashboard');
+
+  // Connect to real MQTT broker
+  if (data.settings.mqttMonitor !== false) {
+    setTimeout(connectMqttBroker, 1500);
+  }
 
   // Periodic refresh
   if (data.settings.refreshInterval > 0) {
@@ -1857,5 +2030,9 @@ window.renderSimTable = renderSimTable;
 window.renderRechargeTable = renderRechargeTable;
 window.renderCustomerTable = renderCustomerTable;
 window.renderAlerts = renderAlerts;
+window.connectMqttBroker = connectMqttBroker;
+window.checkMqttDevices = checkMqttDevices;
+window.publishMqttCommand = publishMqttCommand;
+window.mqttConnected = false;
 
 })();

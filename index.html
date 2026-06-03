@@ -6,6 +6,7 @@
 <title>Asset Management - 智能资产管理平台</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="styles.css"/>
+<link rel="stylesheet" href="bs.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
@@ -425,6 +426,9 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
         <div id="bsActivityFeed"></div>
       </div>
     </div>
+  </div>
+  <div class="bs-bot-bar">
+    <span>系统运行正常</span><span>服务器 broker.emqx.io</span><span>刷新 10s</span><span>数据实时</span>
   </div>
 </div>
 

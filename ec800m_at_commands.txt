@@ -1,0 +1,76 @@
+================================================================
+  Quectel EC800M-CN MQTT AT Commands Reference
+  For Asset Management Platform Integration
+================================================================
+
+Hardware: Quectel EC800M-CN LTE Cat 1 Module
+          "熵" Dual-Row Pin Core Board (GNSS version)
+          UART: 115200 bps, AT Port typically COM5 on PC
+
+================================================================
+  1. BASIC STATUS
+================================================================
+AT              -> OK
+AT+CGMI         -> Quectel
+AT+CGMM         -> EC800M
+AT+CGSN         -> 862012345678901 (IMEI)
+AT+CIMI         -> 460011234567890 (IMSI)
+
+================================================================
+  2. NETWORK & SIGNAL
+================================================================
+AT+CSQ          -> +CSQ: 25,99 (RSSI 0-31)
+AT+CREG?        -> +CREG: 0,1 (registered)
+AT+COPS?        -> +COPS: 0,0,"CHINA MOBILE",7
+AT+CGATT?       -> +CGATT: 1 (PS attached)
+
+================================================================
+  3. MQTT COMMANDS (no TCP socket needed)
+================================================================
+Step 1: Open MQTT network
+AT+QMTOPEN=0,"broker.emqx.io",1883
+-> +QMTOPEN: 0,0
+
+Step 2: Connect to broker
+AT+QMTCONN=0,"EC800M_DEV001"
+-> +QMTCONN: 0,0,0
+
+Step 3: Subscribe to commands
+AT+QMTSUB=0,1,"devices/ec800m-sz001/cmd",1
+-> +QMTSUB: 0,1,0,1
+
+Step 4: Publish status
+AT+QMTPUB=0,1,1,0,"devices/ec800m-sz001/status","{\"online\":true,\"rssi\":25}"
+-> +QMTPUB: 0,1,0
+
+Step 5: Receive commands (URC)
++QMTRECV: 0,1,"devices/ec800m-sz001/cmd",25,"{\"cmd\":\"LOCATE\"}"
+
+Step 6: Disconnect / Close
+AT+QMTDISC=0    -> +QMTDISC: 0,0
+AT+QMTCLOSE=0   -> +QMTCLOSE: 0,0
+
+================================================================
+  4. GNSS COMMANDS
+================================================================
+AT+QGNSS="gnssconfig",1
+AT+QGNSS="loc"
+-> +QGNSS: 22.5431,113.9432,45.2,180.5,65.0,12,2024/06/03,14:30:25
+   (lat,lng,alt,speed,heading,accuracy,sats,date,time)
+
+================================================================
+  5. GPIO (熵 Core Board Pin Mapping)
+================================================================
+Pin 18: GPIO1  - LED status
+Pin 20: GPIO2  - Relay/sensor control
+Pin 22: ADC0   - Battery voltage (0-1.2V)
+Pin 24: I2C SDA - External sensors
+Pin 26: I2C SCL - Sensor clock
+UART1: Pin 8,10 - Debug (115200 bps)
+
+================================================================
+  6. TROUBLESHOOTING
+================================================================
+QMTOPEN fails -> AT+CGATT? must=1, AT+QIACT=1 for IP
+QMTCONN fails -> Check broker reachable, try port 1883
+No URC msgs  -> AT+QMTCFG="recv/mode",0,0,1 then re-subscribe

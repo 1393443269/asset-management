@@ -1,3 +1,4 @@
+
 /**
  * Asset Management - 智能资产管理平台
  * app.js - Application logic, data layer, and UI rendering
@@ -2237,3 +2238,4 @@ window.mqttConnected = false;
 
 })();
 window.toggleDistFullscreen=function(){var e=document.getElementById("page-distribution");if(!document.fullscreenElement){if(e.requestFullscreen)e.requestFullscreen();else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();}};
+

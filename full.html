@@ -2316,6 +2316,7 @@ window.publishMqttCommand = publishMqttCommand;
 window.mqttConnected = false;
 
 })();
+window.toggleDistFullscreen=function(){var e=document.getElementById("page-distribution");if(!document.fullscreenElement){if(e.requestFullscreen)e.requestFullscreen();else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();}};
 </script>
 </head>
 <body>

@@ -65,6 +65,14 @@
 .province-count{color:#409EFF;margin-right:10px}
 .province-online{color:#4ade80;margin-right:8px}
 .province-rate{font-weight:600}
+
+.dist-toolbar{display:flex;align-items:center;margin-bottom:12px;gap:12px}
+.dist-map-container{border:1px solid #2A3440;border-radius:8px;overflow:hidden;margin-bottom:16px;background:#0a1628}
+.dist-map-container #distMap{height:480px!important}
+.dist-fullscreen-btn{background:rgba(64,158,255,0.12);border:1px solid rgba(64,158,255,0.25);color:#409EFF;padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap}
+.dist-fullscreen-btn:hover{background:rgba(64,158,255,0.22)}
+.dist-bottom{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.dist-bottom .panel{margin-bottom:0}
 </style>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1485,11 +1493,11 @@ var CHINA_PROVINCES = ['北京','上海','广东','浙江','四川','湖北','�
 
 function renderDistribution() {
   renderDistStats();
+  renderDistTable();
   setTimeout(function() {
     renderDistAmap();
-    renderDistProvinceChart();
     renderDistProvinceList();
-  }, 300);
+  }, 400);
 }
 
 function renderDistStats() {
@@ -1598,6 +1606,16 @@ function closeDistDetail() {
 }
 window.showProvinceDetail = showProvinceDetail;
 window.closeDistDetail = closeDistDetail;
+
+function renderDistTable() {
+  var tbody = document.getElementById('distTableBody');
+  var count = document.getElementById('distTableCount');
+  if (count) count.textContent = '(' + data.assets.length + ' 台设备)';
+  if (!tbody) return;
+  tbody.innerHTML = data.assets.map(function(a) {
+    return '<tr><td><strong>' + escapeHtml(a.name) + '</strong></td><td>' + escapeHtml(a.model) + '</td><td style="font-size:11px">' + escapeHtml(a.sn) + '</td><td>' + escapeHtml(a.type||'') + '</td><td>' + escapeHtml(a.location) + '</td><td>' + statusBadge(a.status) + '</td></tr>';
+  }).join('');
+}
 
 function renderDistProvinceChart() {
   destroyChart('distProvince');
@@ -2568,24 +2586,18 @@ window.toggleDistFullscreen=function(){var e=document.getElementById("page-distr
         </div>
       </div>
 
-      <!-- Distribution Page -->
+      <!-- Distribution Page - tuqiangol style -->
       <div class="page" id="page-distribution">
         <div class="card-group" id="distStats"></div>
-        <div class="charts-row">
-          <div class="panel" style="position:relative;padding:0;overflow:hidden">
-            <div style="position:absolute;top:12px;left:16px;z-index:10;font-size:14px;font-weight:600;color:#e0e6ed">全国设备分布 <span style="font-size:11px;color:#6b7d8e;font-weight:400">点击省份下钻到市</span></div>
-            <button onclick="toggleDistFullscreen()" style="position:absolute;top:12px;right:16px;z-index:10;background:#252D3A;border:1px solid #2A3440;color:#ccd;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px">⛶ 全屏</button>
-            <div id="distMap" style="width:100%;height:520px"></div>
-          </div>
-          <div class="panel">
-            <h3>📊 省份设备排行</h3>
-            <div class="chart-wrap"><canvas id="distProvinceChart"></canvas></div>
-            <div id="distProvinceList" style="max-height:240px;overflow-y:auto;margin-top:8px"></div>
-          </div>
+        <div class="dist-toolbar">
+          <span style="font-size:15px;font-weight:600;color:#e0e6ed">全国设备分布</span>
+          <span style="font-size:12px;color:#6b7d8e;margin-left:10px">点击省份标记查看设备详情</span>
+          <button class="dist-fullscreen-btn" onclick="toggleDistFullscreen()" style="margin-left:auto">⛶ 全屏</button>
         </div>
-        <div id="distDetailPanel" class="panel" style="display:none">
-          <h3>📍 <span id="distDetailTitle">区域设备详情</span> <button class="btn btn-outline btn-sm" onclick="closeDistDetail()" style="font-size:11px">✕ 关闭</button></h3>
-          <table><thead><tr><th>设备名称</th><th>型号</th><th>SN</th><th>状态</th><th>位置</th><th>最后在线</th></tr></thead><tbody id="distDetailBody"></tbody></table>
+        <div class="dist-map-container"><div id="distMap"></div></div>
+        <div class="dist-bottom">
+          <div class="panel"><h3>设备列表 <span id="distTableCount"></span></h3><table><thead><tr><th>名称</th><th>型号</th><th>序列号</th><th>类型</th><th>位置</th><th>状态</th></tr></thead><tbody id="distTableBody"></tbody></table></div>
+          <div class="panel"><h3>省份排行</h3><div id="distProvinceList"></div></div>
         </div>
       </div>
 

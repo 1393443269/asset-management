@@ -1405,11 +1405,11 @@ var CHINA_PROVINCES = ['北京','上海','广东','浙江','四川','湖北','�
 
 function renderDistribution() {
   renderDistStats();
+  renderDistTable();
   setTimeout(function() {
     renderDistAmap();
-    renderDistProvinceChart();
     renderDistProvinceList();
-  }, 300);
+  }, 400);
 }
 
 function renderDistStats() {
@@ -1518,6 +1518,16 @@ function closeDistDetail() {
 }
 window.showProvinceDetail = showProvinceDetail;
 window.closeDistDetail = closeDistDetail;
+
+function renderDistTable() {
+  var tbody = document.getElementById('distTableBody');
+  var count = document.getElementById('distTableCount');
+  if (count) count.textContent = '(' + data.assets.length + ' 台设备)';
+  if (!tbody) return;
+  tbody.innerHTML = data.assets.map(function(a) {
+    return '<tr><td><strong>' + escapeHtml(a.name) + '</strong></td><td>' + escapeHtml(a.model) + '</td><td style="font-size:11px">' + escapeHtml(a.sn) + '</td><td>' + escapeHtml(a.type||'') + '</td><td>' + escapeHtml(a.location) + '</td><td>' + statusBadge(a.status) + '</td></tr>';
+  }).join('');
+}
 
 function renderDistProvinceChart() {
   destroyChart('distProvince');

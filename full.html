@@ -1519,6 +1519,21 @@ function renderBsDistMap(){
   var el=document.getElementById('bsMap');if(!el)return;
   if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
   var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
+  var m=L.map('bsMap',{zoomControl:true,attributionControl:false}).setView([35,108],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
+  // Load China province GeoJSON
+  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json').then(function(r){return r.json();}).then(function(geo){
+    var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==='在线')pd[p].on++;}});
+    L.geoJSON(geo,{style:function(f){var n=f.properties.name;var d=pd[n];var color='#1a2a44';if(d){if(d.on===d.t)color='#0d3320';else if(d.on>0)color='#332200';else color='#330d0d';}return{fillColor:color,color:'#2a4a6a',weight:1,fillOpacity:0.7};},onEachFeature:function(f,layer){var n=f.properties.name;layer.bindTooltip(n,{permanent:false,direction:'center'});layer.on('click',function(){if(window.showProvinceDetail)window.showProvinceDetail(n);});}}).addTo(m);
+    // Add device markers
+    ap.forEach(function(x){var c=x.status==='在线'?'#4ade80':'#ef4444';L.circleMarker([x.lat,x.lng],{radius:6,fillColor:c,color:'#fff',weight:1.5,fillOpacity:0.9}).addTo(m).bindPopup('<b>'+escapeHtml(x.name)+'</b><br>'+escapeHtml(x.location));});
+    window._bsMap=m;setTimeout(function(){m.invalidateSize();},200);
+  });
+}
+
+function _renderBsDistMap_old(){var el=document.getElementById('bsMap');if(!el)return;
+  if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
+  var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
   if(!ap.length)return;
   var m=L.map('bsMap',{zoomControl:true,attributionControl:false}).setView([35,108],ap.length<=3?6:5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
@@ -1547,19 +1562,21 @@ function renderDistStats() {
     '<div class="card"><div class="label">城市覆盖</div><div class="num">'+new Set(data.assets.map(function(a){return a.location;})).size+'</div><div class="change info">个</div></div>';
 }
 
-function renderDistAmap() {
-  var mapEl = document.getElementById('distMap');
-  if (!mapEl) return;
-  if (maps['dist']) { maps['dist'].destroy(); delete maps['dist']; }
-  mapEl.innerHTML = '';
-
-  var m = new AMap.Map('distMap', {
-    zoom: 5, center: [108, 35], mapStyle: 'amap://styles/darkblue',
-    features: ['bg','road','building','point']
+function renderDistAmap(){
+  var el=document.getElementById('distMap');if(!el)return;
+  if(maps['dist']){maps['dist'].remove();delete maps['dist'];}
+  var m=L.map('distMap',{zoomControl:true,attributionControl:false}).setView([35,108],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
+  maps['dist']=m;
+  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json').then(function(r){return r.json();}).then(function(geo){
+    var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==='在线')pd[p].on++;}});
+    L.geoJSON(geo,{style:function(f){var n=f.properties.name;var d=pd[n];var color='#1a2a44';if(d){if(d.on===d.t)color='#0d3320';else if(d.on>0)color='#332200';else color='#330d0d';}return{fillColor:color,color:'#2a4a6a',weight:1,fillOpacity:0.75};},onEachFeature:function(f,layer){layer.bindTooltip(f.properties.name,{permanent:false,direction:'center'});layer.on('click',function(){if(window.showDistDetail)window.showDistDetail(f.properties.name);});}}).addTo(m);
+    setTimeout(function(){m.invalidateSize();},200);
   });
-  maps['dist'] = m;
+}
 
-  // Province device aggregation
+/* Old AMap code removed:
+  var m = new AMap.Map('distMap
   var provinceData = {};
   data.assets.forEach(function(a) {
     var prov = findProvince(a.location) || '未知';

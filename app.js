@@ -212,7 +212,7 @@ function switchPage(page) {
     case 'commands': renderCommandsPage(); break;
     case 'alerts': renderAlerts(); break;
     case 'reports': renderReports(); break;
-    case 'distribution': renderDistribution(); break;
+    case 'distribution': enterDistBigScreen(); break;
     case 'recharges': renderRechargeTable(); break;
     case 'customers': renderCustomerTable(); break;
     case 'account': renderAccount(); break;
@@ -1402,6 +1402,42 @@ function renderReports() {
 // 17. DEVICE DISTRIBUTION
 // ============================================================
 var CHINA_PROVINCES = ['北京','上海','广东','浙江','四川','湖北','江苏','重庆','福建','山东','广西','陕西','湖南','河南','安徽','江西','河北','云南','贵州','辽宁','吉林','黑龙江','内蒙古','山西','甘肃','新疆','西藏','青海','宁夏','海南','天津','台湾','香港','澳门'];
+
+function enterDistBigScreen(){
+  document.getElementById('page-bigscreen').classList.add('active');
+  document.body.style.overflow='hidden';
+  renderDistBigScreen();
+  if(window._bsTimer)clearInterval(window._bsTimer);
+  window._bsTimer=setInterval(renderDistBigScreen,15000);
+}
+function exitDistBigScreen(){
+  document.getElementById('page-bigscreen').classList.remove('active');
+  document.body.style.overflow='';
+  if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}
+  if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
+}
+
+function renderDistBigScreen(){
+  var a=data.assets,on=a.filter(function(x){return x.status==='在线';}).length,off=a.length-on;
+  var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
+  var kpi=document.getElementById('bsKpiRow');if(kpi)kpi.innerHTML='<div class="bs-kpi online"><div class="val">'+on+'</div><div class="lbl">在线设备</div></div><div class="bs-kpi warning"><div class="val">'+off+'</div><div class="lbl">离线设备</div></div><div class="bs-kpi info"><div class="val">'+a.length+'</div><div class="lbl">设备总数</div></div><div class="bs-kpi online"><div class="val">'+(a.length?Math.round(on/a.length*100):0)+'%</div><div class="lbl">在线率</div></div>';
+  var tb=document.getElementById('bsTableBody');if(tb)tb.innerHTML=a.map(function(x){return '<tr><td><strong>'+escapeHtml(x.name)+'</strong></td><td>'+escapeHtml(x.model)+'</td><td style="font-size:11px">'+escapeHtml(x.sn)+'</td><td>'+escapeHtml(x.location)+'</td><td>'+statusBadge(x.status)+'</td></tr>';}).join('');
+  var tc=document.getElementById('bsTableCount');if(tc)tc.textContent='('+a.length+' 台)';
+  // Province ranking
+  var pl=document.getElementById('bsProvinceList');if(pl){var pd={};a.forEach(function(x){var p=findProvince(x.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(x.status==='在线')pd[p].on++;}});var sorted=CHINA_PROVINCES.filter(function(p){return pd[p]&&pd[p].t>0;}).map(function(p){var d=pd[p];return {n:p,t:d.t,on:d.on};}).sort(function(a,b){return b.t-a.t;});pl.innerHTML=sorted.map(function(x,i){var r=x.t?Math.round(x.on/x.t*100):0;return '<div style="display:flex;align-items:center;padding:8px;border-bottom:1px solid rgba(0,120,220,0.08);cursor:pointer;font-size:12px"><span style="color:#6b7d8e;width:24px">#'+(i+1)+'</span><span style="flex:1;color:#ccd">'+x.n+'</span><span style="color:#409EFF;margin-right:8px">'+x.t+'台</span><span style="color:#4ade80;margin-right:8px">在线'+x.on+'</span><span style="font-weight:600;color:'+(r>=80?'#4ade80':r>=50?'#f59e0b':'#ef4444')+'">'+r+'%</span></div>';}).join('')||'<div style="color:#556677;text-align:center;padding:20px">暂无数据</div>';}
+  renderBsDistMap();
+}
+function renderBsDistMap(){
+  var el=document.getElementById('bsMap');if(!el)return;
+  if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
+  var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
+  if(!ap.length)return;
+  var m=L.map('bsMap',{zoomControl:true,attributionControl:false}).setView([35,108],ap.length<=3?6:5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
+  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==='在线')pd[p].on++;}});
+  CHINA_PROVINCES.forEach(function(p){var d=pd[p];if(!d||d.t===0)return;var c=d.on===d.t?'#4ade80':d.on>0?'#f59e0b':'#ef4444',r=Math.min(28,Math.max(10,d.t*7));L.circleMarker([p.lat,p.lng],{radius:r,fillColor:c,color:'#fff',weight:2,fillOpacity:0.85}).addTo(m).bindPopup('<b>'+p.name+'</b><br>设备:'+d.t+'|在线:'+d.on+'<br>在线率:'+(d.t?Math.round(d.on/d.t*100):0)+'%');L.circle([p.lat,p.lng],{radius:120000,color:c,fillColor:c,fillOpacity:0.05,weight:1}).addTo(m);});
+  window._bsMap=m;setTimeout(function(){m.invalidateSize();},300);
+}
 
 function renderDistribution() {
   renderDistStats();

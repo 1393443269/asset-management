@@ -76,11 +76,6 @@
 .bs-rank-panel .bs-kpi{padding:8px 6px!important}
 .bs-rank-panel .bs-kpi .val{font-size:20px!important}
 .bs-rank-panel .bs-kpi .lbl{font-size:9px!important}
-/* Simple vertical stack layout */
-.bs-body-v2{gap:10px!important}
-.bs-kpi-row{grid-template-columns:repeat(4,1fr)!important;gap:12px!important}
-.bs-table-panel{background:rgba(5,20,50,0.3)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(0,150,255,0.12);border-radius:4px;padding:10px;overflow-y:auto;max-height:250px}
-.bs-bottom-row{display:none!important}
 </style>
 <style>/* Professional Distribution Page */
 #page-distribution .card-group{margin-bottom:12px}
@@ -2755,7 +2750,7 @@ window.toggleBsFullscreen=function(){
     <button class="bs-exit" onclick="toggleBsFullscreen()" style="margin-right:8px">⛶ 全屏</button><button class="bs-exit" onclick="switchPage('dashboard')">✕ 退出大屏</button>
   </div>
   <div class="bs-body-v2">
-    <div class="bs-map-container"><div id="bsMap"></div></div><div class="bs-kpi-row" id="bsKpiRow"></div><div class="bs-table-panel"><div class="bs-panel-title">设备列表 <span id="bsTableCount"></span></div><table><thead><tr><th>名称</th><th>型号</th><th>序列号</th><th>位置</th><th>状态</th><th>在线率</th></tr></thead><tbody id="bsTableBody"></tbody></table></div><div class="bs-bot-bar"><span>系统运行正常</span><span>刷新 10s</span><span>数据实时</span></div>
+    <div class="bs-map-container"><div id="bsMap"></div></div><div class="bs-bottom-row"><div class="bs-table-panel"><div class="bs-panel-title">设备列表 <span id="bsTableCount"></span></div><table><thead><tr><th>名称</th><th>型号</th><th>序列号</th><th>位置</th><th>状态</th><th>在线率</th></tr></thead><tbody id="bsTableBody"></tbody></table></div><div class="bs-rank-panel"><div class="bs-panel-title">设备概览</div><div class="bs-kpi-row" id="bsKpiRow"></div><div id="bsProvinceList" style="margin-top:8px"></div></div></div><div class="bs-bot-bar"><span>系统运行正常</span><span>刷新 10s</span><span>数据实时</span></div>
 </div>
 
 <!-- Asset Modal -->

@@ -1417,7 +1417,11 @@ function refreshBsData(){
   var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
 }
 function exitDistBigScreen(){
-  try{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();}catch(e){}
+  if(document.exitFullscreen){document.exitFullscreen().catch(function(){});}
+  if(document.webkitExitFullscreen){document.webkitExitFullscreen();}
+  if(document.msExitFullscreen){document.msExitFullscreen();}
+  if(document.webkitCancelFullScreen){document.webkitCancelFullScreen();}
+  if(window.fullScreen){window.fullScreen=false;}
   var pg=document.getElementById('page-bigscreen');if(pg)pg.classList.remove('active');
   document.body.style.overflow='';
   if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}

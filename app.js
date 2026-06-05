@@ -444,7 +444,7 @@ function saveAsset() {
   var name = document.getElementById('assetName').value.trim();
   var model = document.getElementById('assetModel').value.trim();
   var sn = document.getElementById('assetSn').value.trim();
-  if (!name || !model || !sn) { showToast('请填写设备名称、型号和序列号', 'error'); return; }
+  if (!name || !model) { showToast('请填写设备名称和型号', 'error'); return; }
 
   var obj = {
     id: id || genId('a'),

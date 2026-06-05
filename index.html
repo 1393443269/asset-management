@@ -416,7 +416,7 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
         <div class="form-group"><label>型号 *</label><input id="assetModel" placeholder="例如: GT-800"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>序列号 *</label><input id="assetSn" placeholder="设备唯一序列号"></div>
+        <div class="form-group"><label>IMEI/序列号 (不可修改)</label><input id="assetSn" placeholder="设备IMEI号" readonly style="background:#1a2030;color:#8899aa"></div>
         <div class="form-group"><label>类型</label><select id="assetType"><option>定位终端</option><option>通讯模块</option><option>传感器</option><option>控制设备</option><option>网关设备</option></select></div>
       </div>
       <div class="form-row">
@@ -458,7 +458,7 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
         <div class="form-group"><label>余额(元)</label><input id="simBalance" type="number" step="0.01" placeholder="0.00"></div>
         <div class="form-group"><label>状态</label><select id="simStatus"><option>正常</option><option>欠费</option><option>未激活</option></select></div>
       </div>
-      <div class="form-group"><label>绑定设备</label><select id="simDeviceId"><option value="">不绑定</option></select></div>
+      <div class="form-group"><label>绑定设备 (自动匹配IMEI)</label><input id="simDeviceId" readonly style="background:#1a2030;color:#8899aa"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeSimModal()">取消</button>

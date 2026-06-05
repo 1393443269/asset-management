@@ -1,0 +1,85 @@
+{
+  "assets": [
+    {
+      "id": "a1",
+      "name": "EC800M-CN 通信模组",
+      "model": "EC800M-CN",
+      "sn": "869598078703629",
+      "type": "通讯模块",
+      "status": "在线",
+      "location": "桂林",
+      "lat": 25.2736,
+      "lng": 110.2902,
+      "createdAt": "2026-06-03"
+    },
+    {
+      "id": "a2",
+      "name": "GPS定位终端 GT-800",
+      "model": "GT-800",
+      "sn": "SN-002",
+      "type": "定位终端",
+      "status": "在线",
+      "location": "北京",
+      "lat": 39.9,
+      "lng": 116.4,
+      "createdAt": "2026-06-01"
+    },
+    {
+      "id": "a3",
+      "name": "温湿度传感器 TH-200",
+      "model": "TH-200",
+      "sn": "SN-004",
+      "type": "传感器",
+      "status": "在线",
+      "location": "上海",
+      "lat": 31.23,
+      "lng": 121.47,
+      "createdAt": "2026-05-15"
+    },
+    {
+      "id": "a4",
+      "name": "GPS定位终端 GT-900",
+      "model": "GT-900",
+      "sn": "SN-005",
+      "type": "定位终端",
+      "status": "离线",
+      "location": "广州",
+      "lat": 23.13,
+      "lng": 113.26,
+      "createdAt": "2026-04-20"
+    }
+  ],
+  "sims": [
+    {
+      "id": "s1",
+      "iccid": "8986032020012345678",
+      "imsi": "460088538000818",
+      "operator": "中国移动",
+      "plan": "30GB/月",
+      "balance": 86.5,
+      "status": "正常",
+      "deviceId": "a1",
+      "deviceName": "EC800M-CN",
+      "createdAt": "2026-06-03"
+    }
+  ],
+  "customers": [
+    {
+      "id": "c1",
+      "name": "中科传感",
+      "contact": "张经理",
+      "phone": "13800000000",
+      "email": "zhang@example.com",
+      "status": "正常",
+      "regDate": "2026-06-01"
+    }
+  ],
+  "alerts": [],
+  "activities": [
+    {
+      "action": "系统启动",
+      "detail": "Asset Management Server 已启动",
+      "time": "2026-06-05"
+    }
+  ]
+}

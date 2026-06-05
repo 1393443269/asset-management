@@ -49,7 +49,7 @@
 @media(max-width:1400px){.bs-body{grid-template-columns:260px 1fr 260px}}
 @media(max-width:1100px){.bs-body{grid-template-columns:1fr}.bs-left,.bs-right{display:none}}
 /* Big screen: compact layout, 50% smaller */
-.bs-body-v2{padding:10px 20px 0!important;gap:8px!important}
+.bs-body-v2{flex:1;display:flex;flex-direction:column;padding:10px 20px 0!important;gap:8px!important;overflow-y:auto;position:relative;z-index:2}
 .bs-kpi-row{gap:10px!important}
 .bs-kpi{padding:10px!important}
 .bs-kpi .val{font-size:24px!important}
@@ -76,6 +76,8 @@
 .bs-rank-panel .bs-kpi{padding:8px 6px!important}
 .bs-rank-panel .bs-kpi .val{font-size:20px!important}
 .bs-rank-panel .bs-kpi .lbl{font-size:9px!important}
+.bs-kpi-row{background:rgba(5,20,50,0.3)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:4px;padding:10px!important;margin-bottom:10px!important;z-index:3;position:relative}
+.bs-kpi{background:rgba(5,20,50,0.4)!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 </style>
 <style>/* Professional Distribution Page */
 #page-distribution .card-group{margin-bottom:12px}

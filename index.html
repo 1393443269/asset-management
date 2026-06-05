@@ -384,18 +384,23 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
 
 <!-- Big Screen Display (full-screen overlay, outside wrap) -->
 <div class="page bigscreen-page" id="page-bigscreen">
+  <div class="bs-map-container"><div id="bsMap"></div></div>
   <div class="bs-top">
     <div class="bs-title">Asset Management 智能资产管理平台</div>
     <div class="bs-datetime" id="bsDatetime"></div>
-    <button class="bs-exit" onclick="toggleBsFullscreen()" style="margin-right:8px">⛶ 全屏</button><button class="bs-exit" onclick="switchPage('dashboard')">✕ 退出大屏</button>
+    <button class="bs-exit" onclick="toggleBsFullscreen()">⛶ 全屏</button>
+    <button class="bs-exit" onclick="switchPage('dashboard')">✕ 退出大屏</button>
   </div>
   <div class="bs-body-v2">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px" id="bsKpiRow"></div>
-    <div style="display:grid;grid-template-columns:1fr 260px;gap:12px;flex:1;min-height:0">
-      <div class="bs-map-container" style="position:relative!important;inset:auto!important"><div id="bsMap"></div></div>
-      <div class="bs-glass" style="display:flex;flex-direction:column;overflow-y:auto"><h4 class="bs-ttl">省份排行</h4><div id="bsProvinceList"></div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="bsKpiRow"></div>
+    <div style="flex:1;min-height:0"></div>
+    <div class="bs-glass" style="width:260px;align-self:flex-end">
+      <h4 class="bs-ttl">省份排行</h4>
+      <div id="bsProvinceList"></div>
     </div>
-    <div class="bs-bot-bar"><span>系统运行正常</span><span>刷新 10s</span><span>数据实时</span></div>
+  </div>
+  <div class="bs-bot-bar"><span>系统运行正常</span><span>刷新 10s</span><span>数据实时</span></div>
+
   </div>
   </div>
 </div>

@@ -1428,21 +1428,25 @@ function renderDistBigScreen(){
   renderBsDistMap();
 }
 function renderBsDistMap(){
-  var el=document.getElementById('bsMap');if(!el)return;
-  if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
-  var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
-  var m=L.map('bsMap',{zoomControl:true,attributionControl:false}).setView([35,108],5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
-  // Load China province GeoJSON
-  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json').then(function(r){return r.json();}).then(function(geo){
-    var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==='在线')pd[p].on++;}});
-    L.geoJSON(geo,{style:function(f){var n=f.properties.name;var d=pd[n];var color='#1a2a44';if(d){if(d.on===d.t)color='#0d3320';else if(d.on>0)color='#332200';else color='#330d0d';}return{fillColor:color,color:'#2a4a6a',weight:1,fillOpacity:0.7};},onEachFeature:function(f,layer){var n=f.properties.name;layer.bindTooltip(n,{permanent:false,direction:'center'});layer.on('click',function(){if(window.showProvinceDetail)window.showProvinceDetail(n);});}}).addTo(m);
-    // Add device markers
-    ap.forEach(function(x){var c=x.status==='在线'?'#4ade80':'#ef4444';L.circleMarker([x.lat,x.lng],{radius:6,fillColor:c,color:'#fff',weight:1.5,fillOpacity:0.9}).addTo(m).bindPopup('<b>'+escapeHtml(x.name)+'</b><br>'+escapeHtml(x.location));});
-    window._bsMap=m;setTimeout(function(){m.invalidateSize();},200);
+  var el=document.getElementById("bsMap");if(!el)return;
+  if(window._bsMapAmap){window._bsMapAmap.destroy();}
+  el.innerHTML="";
+  var m=new AMap.Map("bsMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
+  window._bsMapAmap=m;
+  m.plugin(["AMap.DistrictLayer"],function(){
+    new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.8)","province-stroke":"#1a3355"}}).setMap(m);
+  });
+  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
+  var centers={"北京":[116.40,39.90],"上海":[121.47,31.23],"广东":[113.26,23.13],"浙江":[120.15,30.27],"四川":[104.06,30.57],"湖北":[114.30,30.59],"江苏":[118.79,32.06],"重庆":[106.55,29.56],"福建":[119.30,26.07],"山东":[116.98,36.67],"广西":[108.37,22.82],"陕西":[108.94,34.26],"湖南":[112.97,28.19],"河南":[113.65,34.76],"安徽":[117.28,31.86],"江西":[115.89,28.68],"河北":[114.48,38.04],"云南":[102.71,25.04],"贵州":[106.63,26.65],"辽宁":[123.43,41.80],"黑龙江":[126.53,45.80],"新疆":[87.62,43.79],"西藏":[91.13,29.65],"海南":[110.35,20.02],"天津":[117.19,39.12]};
+  Object.keys(pd).forEach(function(name){
+    var pos=centers[name];if(!pos)return;var d=pd[name];
+    var c=d.on===d.t?"#4ade80":d.on>0?"#f59e0b":"#ef4444";
+    var mk=new AMap.CircleMarker({center:pos,radius:Math.min(24,Math.max(10,d.t*6)),fillColor:c,fillOpacity:0.3,strokeColor:c,strokeWeight:2,zIndex:20});
+    mk.setMap(m);
+    mk.on("click",function(n){return function(){if(window.showDistDetail)window.showDistDetail(n);};}(name));
+    mk.setLabel({content:name+" "+d.t+"台",direction:"center",style:{color:"#fff",background:"rgba(0,0,0,0.75)",border:"1px solid "+c,padding:"3px 8px",borderRadius:"4px",fontSize:"11px"}});
   });
 }
-
 function _renderBsDistMap_old(){var el=document.getElementById('bsMap');if(!el)return;
   if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
   var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
@@ -1476,17 +1480,24 @@ function renderDistStats() {
 
 function renderDistAmap(){
   var el=document.getElementById("distMap");if(!el)return;
-  if(maps["dist"]){maps["dist"].remove();delete maps["dist"];}
-  var m=L.map("distMap",{zoomControl:true,attributionControl:false}).setView([35,108],5);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(m);
-  maps["dist"]=m;
-  fetch("https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json").then(function(r){return r.json();}).then(function(geo){
-    var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
-    L.geoJSON(geo,{style:function(f){var n=f.properties.name;var d=pd[n];var color="#1a2a44";if(d){if(d.on===d.t)color="#0d3320";else if(d.on>0)color="#332200";else color="#330d0d";}return{fillColor:color,color:"#2a4a6a",weight:1,fillOpacity:0.75};},onEachFeature:function(f,layer){layer.bindTooltip(f.properties.name,{permanent:false,direction:"center"});layer.on("click",function(){if(window.showDistDetail)window.showDistDetail(f.properties.name);});}}).addTo(m);
-    var ap=data.assets.filter(function(x){return x.lat&&x.lng;});
-    ap.forEach(function(x){var c=x.status==="在线"?"#4ade80":"#ef4444";L.circleMarker([x.lat,x.lng],{radius:6,fillColor:c,color:"#fff",weight:1.5,fillOpacity:0.9}).addTo(m).bindPopup("<b>"+escapeHtml(x.name)+"</b><br>"+escapeHtml(x.location));});
-    setTimeout(function(){m.invalidateSize();},200);
+  if(window._amapDist){window._amapDist.destroy();}
+  el.innerHTML="";
+  var m=new AMap.Map("distMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
+  window._amapDist=m;
+  m.plugin(["AMap.DistrictLayer"],function(){
+    new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.8)","province-stroke":"#1a3355","city-stroke":"#0d2240","county-stroke":"#091830"}}).setMap(m);
   });
+  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
+  var centers={"北京":[116.40,39.90],"上海":[121.47,31.23],"广东":[113.26,23.13],"浙江":[120.15,30.27],"四川":[104.06,30.57],"湖北":[114.30,30.59],"江苏":[118.79,32.06],"重庆":[106.55,29.56],"福建":[119.30,26.07],"山东":[116.98,36.67],"广西":[108.37,22.82],"陕西":[108.94,34.26],"湖南":[112.97,28.19],"河南":[113.65,34.76],"安徽":[117.28,31.86],"江西":[115.89,28.68],"河北":[114.48,38.04],"云南":[102.71,25.04],"贵州":[106.63,26.65],"辽宁":[123.43,41.80],"吉林":[125.32,43.89],"黑龙江":[126.53,45.80],"内蒙古":[111.75,40.82],"山西":[112.55,37.87],"甘肃":[103.83,36.06],"新疆":[87.62,43.79],"西藏":[91.13,29.65],"青海":[101.78,36.62],"宁夏":[106.26,38.47],"海南":[110.35,20.02],"天津":[117.19,39.12],"台湾":[121.56,25.03],"香港":[114.17,22.28],"澳门":[113.55,22.20]};
+  Object.keys(pd).forEach(function(name){
+    var pos=centers[name];if(!pos)return;var d=pd[name];
+    var c=d.on===d.t?"#4ade80":d.on>0?"#f59e0b":"#ef4444";
+    var mk=new AMap.CircleMarker({center:pos,radius:Math.min(24,Math.max(10,d.t*6)),fillColor:c,fillOpacity:0.3,strokeColor:c,strokeWeight:2,zIndex:20});
+    mk.setMap(m);
+    mk.on("click",function(n){return function(){if(window.showDistDetail)window.showDistDetail(n);};}(name));
+    mk.setLabel({content:name+" "+d.t+"台",direction:"center",style:{color:"#fff",background:"rgba(0,0,0,0.75)",border:"1px solid "+c,padding:"3px 8px",borderRadius:"4px",fontSize:"11px"}});
+  });
+  setTimeout(function(){m.setFitView();},500);
 }
 
 function findProvince(loc) {

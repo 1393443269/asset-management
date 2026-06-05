@@ -1417,6 +1417,7 @@ function refreshBsData(){
   var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
 }
 function exitDistBigScreen(){
+  try{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();}catch(e){}
   var pg=document.getElementById('page-bigscreen');if(pg)pg.classList.remove('active');
   document.body.style.overflow='';
   if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}

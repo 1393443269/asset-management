@@ -14,7 +14,9 @@ const defaultData = {
   assets: [
     { id:'a1', name:'EC800M-CN 通信模组', model:'EC800M-CN', sn:'869598078703629', type:'通讯模块', mqttTopic:'ec800m-sz001', status:'在线', location:'桂林', purchaseDate:'2026-06-03', lat:25.2736, lng:110.2902, remark:'COM3 AT端口 | 中国移动 LTE | CSQ:29 | 固件 EC800MCNGBR06A05M08', createdAt:'2026-06-03 10:00' }
   ],
-  sims: [],
+  sims: [
+    {id:'s1',iccid:'8986032020012345678',imsi:'460088538000818',operator:'中国移动',plan:'30GB/月',balance:86.50,status:'正常',deviceId:'a1',deviceSn:'869598078703629',deviceName:'EC800M-CN 通信模组',createdAt:'2026-06-03'}
+  ],
   recharges: [],
   fences: [],
   customers: [],
@@ -145,6 +147,8 @@ function confirmAction(msg, fn) {
   if (confirm(msg)) fn();
 }
 
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -444,7 +448,7 @@ function saveAsset() {
   var name = document.getElementById('assetName').value.trim();
   var model = document.getElementById('assetModel').value.trim();
   var sn = document.getElementById('assetSn').value.trim();
-  if (!name || !model || !sn) { showToast('请填写设备名称、型号和序列号', 'error'); return; }
+  if (!name || !model) { showToast('请填写设备名称和型号', 'error'); return; }
 
   var obj = {
     id: id || genId('a'),
@@ -1408,20 +1412,38 @@ function enterDistBigScreen(){
   document.body.style.overflow='hidden';
   renderDistBigScreen();
   if(window._bsTimer)clearInterval(window._bsTimer);
-  window._bsTimer=setInterval(renderDistBigScreen,15000);
+  window._bsTimer=setInterval(refreshBsData,15000);
+}
+function refreshBsData(){
+  var a=data.assets,on=a.filter(function(x){return x.status==='在线';}).length,off=a.length-on;
+  var kpi=document.getElementById('bsKpiRow');if(kpi)kpi.innerHTML='<div class="bs-kpi online"><div class="val">'+on+'</div><div class="lbl">在线设备</div></div><div class="bs-kpi warning"><div class="val">'+off+'</div><div class="lbl">离线设备</div></div><div class="bs-kpi info"><div class="val">'+a.length+'</div><div class="lbl">设备总数</div></div><div class="bs-kpi online"><div class="val">'+(a.length?Math.round(on/a.length*100):0)+'%</div><div class="lbl">在线率</div></div>';
+  var pl=document.getElementById('bsProvinceList');if(pl){var pd={};a.forEach(function(x){var p=findProvince(x.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(x.status==='在线')pd[p].on++;}});var sorted=CHINA_PROVINCES.filter(function(p){return pd[p]&&pd[p].t>0;}).map(function(p){var d=pd[p];return {n:p,t:d.t,on:d.on};}).sort(function(a,b){return b.t-a.t;});pl.innerHTML=sorted.map(function(x,i){var r=x.t?Math.round(x.on/x.t*100):0;return '<div style="display:flex;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(0,120,220,0.08);cursor:pointer;font-size:11px"><span style="color:#6b7d8e;width:24px">#'+(i+1)+'</span><span style="flex:1;color:#ccd">'+x.n+'</span><span style="color:#4ade80;margin-right:8px">在线'+x.on+'</span><span style="color:#409EFF;margin-right:8px">'+x.t+'台</span><span style="font-weight:600;color:'+(r>=80?'#4ade80':r>=50?'#f59e0b':'#ef4444')+'">'+r+'%</span></div>';}).join('')||'<div style="color:#556677;text-align:center;padding:20px">暂无数据</div>';}
+  var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
 }
 function exitDistBigScreen(){
-  document.getElementById('page-bigscreen').classList.remove('active');
-  document.body.style.overflow='';
-  if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}
-  if(window._bsMap){window._bsMap.remove();window._bsMap=null;}
+  // Must be called directly from user click event for browser fullscreen exit to work
+  if(document.fullscreenElement||document.webkitFullscreenElement){
+    if(document.exitFullscreen)document.exitFullscreen();
+    else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+    else if(document.msExitFullscreen)document.msExitFullscreen();
+    else if(document.webkitCancelFullScreen)document.webkitCancelFullScreen();
+  }
+  // Wait one frame for fullscreen exit to take effect, then close big screen
+  setTimeout(function(){
+    var pg=document.getElementById('page-bigscreen');if(pg)pg.classList.remove('active');
+    document.body.style.overflow='';
+    if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}
+    if(window._bsMapAmap){window._bsMapAmap.destroy();window._bsMapAmap=null;}
+    var el=document.getElementById('bsMap');if(el)el.innerHTML='';
+    switchPage('dashboard');
+  },300);
 }
 
 function renderDistBigScreen(){
   var a=data.assets,on=a.filter(function(x){return x.status==='在线';}).length,off=a.length-on;
   var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
   var kpi=document.getElementById('bsKpiRow');if(kpi)kpi.innerHTML='<div class="bs-kpi online"><div class="val">'+on+'</div><div class="lbl">在线设备</div></div><div class="bs-kpi warning"><div class="val">'+off+'</div><div class="lbl">离线设备</div></div><div class="bs-kpi info"><div class="val">'+a.length+'</div><div class="lbl">设备总数</div></div><div class="bs-kpi online"><div class="val">'+(a.length?Math.round(on/a.length*100):0)+'%</div><div class="lbl">在线率</div></div>';
-  var tb=document.getElementById('bsTableBody');if(tb)tb.innerHTML=a.map(function(x){return '<tr><td><strong>'+escapeHtml(x.name)+'</strong></td><td>'+escapeHtml(x.model)+'</td><td style="font-size:11px">'+escapeHtml(x.sn)+'</td><td>'+escapeHtml(x.location)+'</td><td>'+statusBadge(x.status)+'</td></tr>';}).join('');
+  var tb=document.getElementById('bsTableBody');if(tb)tb.innerHTML=a.map(function(x){var rate=x.status==='在线'?'100%':'0%';return '<tr><td><strong>'+escapeHtml(x.name)+'</strong></td><td>'+escapeHtml(x.model)+'</td><td style="font-size:10px">'+escapeHtml(x.sn)+'</td><td>'+escapeHtml(x.location)+'</td><td>'+statusBadge(x.status)+'</td><td style="color:'+(x.status==='在线'?'#4ade80':'#94a3b8')+';font-weight:600">'+rate+'</td></tr>';}).join('');
   var tc=document.getElementById('bsTableCount');if(tc)tc.textContent='('+a.length+' 台)';
   // Province ranking
   var pl=document.getElementById('bsProvinceList');if(pl){var pd={};a.forEach(function(x){var p=findProvince(x.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(x.status==='在线')pd[p].on++;}});var sorted=CHINA_PROVINCES.filter(function(p){return pd[p]&&pd[p].t>0;}).map(function(p){var d=pd[p];return {n:p,t:d.t,on:d.on};}).sort(function(a,b){return b.t-a.t;});pl.innerHTML=sorted.map(function(x,i){var r=x.t?Math.round(x.on/x.t*100):0;return '<div style="display:flex;align-items:center;padding:8px;border-bottom:1px solid rgba(0,120,220,0.08);cursor:pointer;font-size:12px"><span style="color:#6b7d8e;width:24px">#'+(i+1)+'</span><span style="flex:1;color:#ccd">'+x.n+'</span><span style="color:#409EFF;margin-right:8px">'+x.t+'台</span><span style="color:#4ade80;margin-right:8px">在线'+x.on+'</span><span style="font-weight:600;color:'+(r>=80?'#4ade80':r>=50?'#f59e0b':'#ef4444')+'">'+r+'%</span></div>';}).join('')||'<div style="color:#556677;text-align:center;padding:20px">暂无数据</div>';}
@@ -1433,18 +1455,15 @@ function renderBsDistMap(){
   el.innerHTML="";
   var m=new AMap.Map("bsMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
   window._bsMapAmap=m;
-  m.plugin(["AMap.DistrictLayer"],function(){
-    new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.8)","province-stroke":"#1a3355"}}).setMap(m);
-  });
-  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
-  var centers={"北京":[116.40,39.90],"上海":[121.47,31.23],"广东":[113.26,23.13],"浙江":[120.15,30.27],"四川":[104.06,30.57],"湖北":[114.30,30.59],"江苏":[118.79,32.06],"重庆":[106.55,29.56],"福建":[119.30,26.07],"山东":[116.98,36.67],"广西":[108.37,22.82],"陕西":[108.94,34.26],"湖南":[112.97,28.19],"河南":[113.65,34.76],"安徽":[117.28,31.86],"江西":[115.89,28.68],"河北":[114.48,38.04],"云南":[102.71,25.04],"贵州":[106.63,26.65],"辽宁":[123.43,41.80],"黑龙江":[126.53,45.80],"新疆":[87.62,43.79],"西藏":[91.13,29.65],"海南":[110.35,20.02],"天津":[117.19,39.12]};
-  Object.keys(pd).forEach(function(name){
-    var pos=centers[name];if(!pos)return;var d=pd[name];
-    var c=d.on===d.t?"#4ade80":d.on>0?"#f59e0b":"#ef4444";
-    var mk=new AMap.CircleMarker({center:pos,radius:Math.min(24,Math.max(10,d.t*6)),fillColor:c,fillOpacity:0.3,strokeColor:c,strokeWeight:2,zIndex:20});
-    mk.setMap(m);
-    mk.on("click",function(n){return function(){if(window.showDistDetail)window.showDistDetail(n);};}(name));
-    mk.setLabel({content:name+" "+d.t+"台",direction:"center",style:{color:"#fff",background:"rgba(0,0,0,0.75)",border:"1px solid "+c,padding:"3px 8px",borderRadius:"4px",fontSize:"11px"}});
+  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status=="在线")pd[p].on++;}});
+  // Use built-in CountryLayer for professional look (like tuqiangol)
+  m.plugin(["AMap.DistrictLayer","AMap.DistrictSearch"],function(){
+    new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.6)","province-stroke":"rgba(100,180,255,0.3)","city-stroke":"rgba(100,180,255,0.15)","county-stroke":"rgba(100,180,255,0.08)"}}).setMap(m);
+    // Click: use DistrictSearch for reverse geocode  
+    m.on("click",function(e){
+      var ds=new AMap.DistrictSearch({level:"province",extensions:"base"});
+      ds.search(e.lnglat,function(s,r){if(s==="complete"&&r.districtList.length>0){var n=r.districtList[0].name;var d=pd[n];var info=d?(n+" 设备:"+d.t+" 在线:"+d.on+" 在线率:"+Math.round(d.on/d.t*100)+"%"):(n+" 暂无设备");new AMap.InfoWindow({content:'<div style="padding:10px 16px;font-size:14px;color:#fff;background:rgba(0,0,0,0.85);border-radius:8px"><b>'+info+'</b></div>',offset:[0,-15]}).open(m,e.lnglat);}});
+    });
   });
 }
 function _renderBsDistMap_old(){var el=document.getElementById('bsMap');if(!el)return;
@@ -1484,7 +1503,7 @@ function renderDistAmap(){
   el.innerHTML="";
   var m=new AMap.Map("distMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
   window._amapDist=m;
-  m.plugin(["AMap.DistrictLayer"],function(){
+  m.plugin(["AMap.DistrictLayer","AMap.DistrictSearch"],function(){
     new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.8)","province-stroke":"#1a3355","city-stroke":"#0d2240","county-stroke":"#091830"}}).setMap(m);
   });
   var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
@@ -2257,5 +2276,8 @@ window.checkMqttDevices = checkMqttDevices;
 window.publishMqttCommand = publishMqttCommand;
 window.mqttConnected = false;
 
+window.exitDistBigScreen=exitDistBigScreen;window.enterDistBigScreen=enterDistBigScreen;
 })();
 window.toggleDistFullscreen=function(){var e=document.getElementById("page-distribution");if(!document.fullscreenElement){if(e.requestFullscreen)e.requestFullscreen();else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();}};
+window.toggleBsFullscreen=function(){var el=document.getElementById("page-bigscreen");if(el.requestFullscreen)el.requestFullscreen().catch(function(){});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();};
+

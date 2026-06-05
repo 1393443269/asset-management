@@ -2279,9 +2279,5 @@ window.mqttConnected = false;
 window.exitDistBigScreen=exitDistBigScreen;window.enterDistBigScreen=enterDistBigScreen;
 })();
 window.toggleDistFullscreen=function(){var e=document.getElementById("page-distribution");if(!document.fullscreenElement){if(e.requestFullscreen)e.requestFullscreen();else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();}};
-window.toggleBsFullscreen=function(){
-  var el=document.getElementById('page-bigscreen');
-  if(!document.fullscreenElement){if(el.requestFullscreen)el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}
-  else{if(document.exitFullscreen)document.exitFullscreen();}
-};
+window.toggleBsFullscreen=function(){var el=document.getElementById("page-bigscreen");if(el.requestFullscreen)el.requestFullscreen().catch(function(){});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();};
 

@@ -63,3 +63,8 @@
 .bs-table-panel,.bs-rank-panel{background:rgba(5,20,50,0.3)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .bs-top{background:rgba(5,15,30,0.3)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .bs-bot-bar{background:rgba(5,15,30,0.3)!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* KPI cards inside right panel - compact 2x2 grid */
+.bs-rank-panel .bs-kpi-row{grid-template-columns:1fr 1fr!important;gap:6px!important;margin-bottom:8px!important}
+.bs-rank-panel .bs-kpi{padding:8px 6px!important}
+.bs-rank-panel .bs-kpi .val{font-size:20px!important}
+.bs-rank-panel .bs-kpi .lbl{font-size:9px!important}

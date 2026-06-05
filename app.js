@@ -1417,20 +1417,22 @@ function refreshBsData(){
   var dt=document.getElementById('bsDatetime');if(dt)dt.textContent=new Date().toLocaleString('zh-CN',{hour12:false});
 }
 function exitDistBigScreen(){
-  if(document.exitFullscreen){document.exitFullscreen().catch(function(){});}
-  if(document.webkitExitFullscreen){document.webkitExitFullscreen();}
-  if(document.msExitFullscreen){document.msExitFullscreen();}
-  if(document.webkitCancelFullScreen){document.webkitCancelFullScreen();}
-  if(window.fullScreen){window.fullScreen=false;}
-  var pg=document.getElementById('page-bigscreen');if(pg)pg.classList.remove('active');
-  document.body.style.overflow='';
-  if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}
-  if(window._bsMapAmap){window._bsMapAmap.destroy();window._bsMapAmap=null;}
-  var el=document.getElementById('bsMap');if(el)el.innerHTML='';
-  currentPage='dashboard';
-  document.querySelectorAll('.nav-item').forEach(function(e){e.classList.toggle('active',e.dataset.page==='dashboard');});
-  document.getElementById('pageTitle').textContent='工作台';
-  renderDashboard();
+  // Must be called directly from user click event for browser fullscreen exit to work
+  if(document.fullscreenElement||document.webkitFullscreenElement){
+    if(document.exitFullscreen)document.exitFullscreen();
+    else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+    else if(document.msExitFullscreen)document.msExitFullscreen();
+    else if(document.webkitCancelFullScreen)document.webkitCancelFullScreen();
+  }
+  // Wait one frame for fullscreen exit to take effect, then close big screen
+  setTimeout(function(){
+    var pg=document.getElementById('page-bigscreen');if(pg)pg.classList.remove('active');
+    document.body.style.overflow='';
+    if(window._bsTimer){clearInterval(window._bsTimer);window._bsTimer=null;}
+    if(window._bsMapAmap){window._bsMapAmap.destroy();window._bsMapAmap=null;}
+    var el=document.getElementById('bsMap');if(el)el.innerHTML='';
+    switchPage('dashboard');
+  },300);
 }
 
 function renderDistBigScreen(){
@@ -2270,6 +2272,7 @@ window.checkMqttDevices = checkMqttDevices;
 window.publishMqttCommand = publishMqttCommand;
 window.mqttConnected = false;
 
+window.exitDistBigScreen=exitDistBigScreen;window.enterDistBigScreen=enterDistBigScreen;
 })();
 window.toggleDistFullscreen=function(){var e=document.getElementById("page-distribution");if(!document.fullscreenElement){if(e.requestFullscreen)e.requestFullscreen();else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();}};
 window.toggleBsFullscreen=function(){
@@ -2277,3 +2280,4 @@ window.toggleBsFullscreen=function(){
   if(!document.fullscreenElement){if(el.requestFullscreen)el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}
   else{if(document.exitFullscreen)document.exitFullscreen();}
 };
+

@@ -465,7 +465,20 @@ function renderDashMap() {
 // ============================================================
 // 7. ASSET MANAGEMENT
 // ============================================================
+var _assetPage=1,_assetPageSize=10;
 function renderAssetTable() {
+  var search=(document.getElementById('assetSearch')&&document.getElementById('assetSearch').value||'').toLowerCase();
+  var sf=(document.getElementById('assetStatusFilter')&&document.getElementById('assetStatusFilter').value||'');
+  var tf=(document.getElementById('assetTypeFilter')&&document.getElementById('assetTypeFilter').value||'');
+  var filtered=data.assets.filter(function(a){
+    if(search&&a.name.toLowerCase().indexOf(search)===-1&&a.sn.toLowerCase().indexOf(search)===-1)return false;
+    if(sf&&a.status!==sf)return false;if(tf&&a.type!==tf)return false;return true;
+  });
+  var total=filtered.length,totalPages=Math.ceil(total/_assetPageSize);
+  var start=(_assetPage-1)*_assetPageSize,pageItems=filtered.slice(start,start+_assetPageSize);
+  var tbody=document.querySelector('#assetTable tbody');if(!tbody)return;
+  tbody.innerHTML=pageItems.map(function(a){return '<tr><td><strong>'+escapeHtml(a.name)+'</strong></td><td>'+escapeHtml(a.model)+'</td><td style="font-size:11px">'+escapeHtml(a.sn)+'</td><td>'+escapeHtml(a.type||'')+'</td><td style="font-size:11px">'+(a.mqttTopic||'-')+'</td><td>'+statusBadge(a.status)+'</td><td>'+escapeHtml(a.location||'')+'</td><td>'+(a.purchaseDate||'-')+'</td><td><button class="btn btn-outline btn-sm" onclick="editAsset(''+a.id+'')">编辑</button> <button class="btn btn-danger btn-sm" onclick="deleteAsset(''+a.id+'')">删除</button></td></tr>';}).join('');
+  var pagEl=document.getElementById('assetPagination');if(pagEl)pagEl.innerHTML='<span style="color:#6b7d8e">共'+total+'条</span> '+Array.from({length:totalPages},function(_,i){return '<button class="btn '+(i+1===_assetPage?'btn-primary':'btn-outline')+' btn-sm" onclick="_assetPage='+(i+1)+';renderAssetTable()">'+(i+1)+'</button>';}).join(' ');
   var search = ($('#assetSearch') && $('#assetSearch').value || '').toLowerCase();
   var statusFilter = ($('#assetStatusFilter') && $('#assetStatusFilter').value || '');
   var typeFilter = ($('#assetTypeFilter') && $('#assetTypeFilter').value || '');
@@ -1700,7 +1713,19 @@ function renderDistProvinceList() {
 // ============================================================
 // 18. CUSTOMER MANAGEMENT
 // ============================================================
+var _custPage=1,_custPageSize=10;
 function renderCustomerTable() {
+  var search=(document.getElementById('customerSearch')&&document.getElementById('customerSearch').value||'').toLowerCase();
+  var sf=(document.getElementById('customerStatusFilter')&&document.getElementById('customerStatusFilter').value||'');
+  var filtered=data.customers.filter(function(c){
+    if(search&&c.name.toLowerCase().indexOf(search)===-1&&(c.contact||'').toLowerCase().indexOf(search)===-1&&(c.phone||'').indexOf(search)===-1)return false;
+    if(sf&&c.status!==sf)return false;return true;
+  });
+  var total=filtered.length,totalPages=Math.ceil(total/_custPageSize);
+  var start=(_custPage-1)*_custPageSize,pageItems=filtered.slice(start,start+_custPageSize);
+  var tbody=document.querySelector('#customerTable tbody');if(!tbody)return;
+  tbody.innerHTML=pageItems.map(function(c){return '<tr><td><strong>'+escapeHtml(c.name)+'</strong></td><td>'+escapeHtml(c.contact||'')+'</td><td>'+escapeHtml(c.phone||'')+'</td><td>'+escapeHtml(c.email||'')+'</td><td>'+escapeHtml(c.regDate||'')+'</td><td>'+statusBadge(c.status)+'</td><td><button class="btn btn-outline btn-sm" onclick="editCustomer(''+c.id+'')">编辑</button></td></tr>';}).join('');
+  var pagEl=document.getElementById('customerPagination');if(pagEl)pagEl.innerHTML='<span style="color:#6b7d8e">共'+total+'条</span> '+Array.from({length:totalPages},function(_,i){return '<button class="btn '+(i+1===_custPage?'btn-primary':'btn-outline')+' btn-sm" onclick="_custPage='+(i+1)+';renderCustomerTable()">'+(i+1)+'</button>';}).join(' ');
   var search = ($('#customerSearch') && $('#customerSearch').value || '').toLowerCase();
   var statusFilter = ($('#customerStatusFilter') && $('#customerStatusFilter').value || '');
 

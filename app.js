@@ -1431,27 +1431,33 @@ function renderBsDistMap(){
   var el=document.getElementById("bsMap");if(!el)return;
   if(window._bsMapAmap){window._bsMapAmap.destroy();}
   el.innerHTML="";
-  var m=new AMap.Map("bsMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
+  var m=new AMap.Map("bsMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true,features:["bg","road","building"],mask:[
+    new AMap.Polygon({path:[[-180,90],[180,90],[180,-90],[-180,-90]],fillColor:"#000",fillOpacity:0.6,strokeOpacity:0})
+  ]});
   window._bsMapAmap=m;
-  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status=="在线")pd[p].on++;}});
+  var cityData={};data.assets.forEach(function(a){var loc=a.location;if(loc){if(!cityData[loc])cityData[loc]={t:0,on:0};cityData[loc].t++;if(a.status=="在线")cityData[loc].on++;}});
   m.plugin(["AMap.DistrictSearch"],function(){
-    var ds=new AMap.DistrictSearch({level:"province",extensions:"all",subdistrict:0});
+    var ds=new AMap.DistrictSearch({level:"city",extensions:"all",subdistrict:0});
     ds.search("中国",function(status,result){
       if(status!=="complete"||!result.districtList[0])return;
-      result.districtList[0].districtList.forEach(function(prov){
-        var name=prov.name;var d=pd[name];
-        var fc=d?(d.on===d.t?"#0d3320":d.on>0?"#332200":"#330d0d"):"#0a1a30";
-        if(prov.boundaries){
-          prov.boundaries.forEach(function(b){
-            var poly=new AMap.Polygon({path:b,fillColor:fc,fillOpacity:0.55,strokeColor:"#3a6699",strokeWeight:1,strokeOpacity:0.6});
-            poly.setMap(m);
-            poly.on("click",function(e){
-              var info=d?(name+" - 设备:"+d.t+" 在线:"+d.on+" 在线率:"+Math.round(d.on/d.t*100)+"%"):(name+" - 暂无设备");
-              var iw=new AMap.InfoWindow({content:'<div style="padding:10px 16px;font-size:14px;color:#fff;background:rgba(0,0,0,0.9);border-radius:8px;border:1px solid '+(d?"#4ade80":"#556677")+'"><b>'+info+'</b></div>',offset:[0,-10]});
-              iw.open(m,e.lnglat);setTimeout(function(){iw.close();},4000);
+      var provs=result.districtList[0].districtList||[];
+      provs.forEach(function(prov){
+        var cities=prov.districtList||[];
+        cities.forEach(function(city){
+          var name=city.name;var d=cityData[name];
+          var fc=d?(d.on===d.t?"#0d3320":d.on>0?"#332200":"#330d0d"):"#0a1a30";
+          if(city.boundaries){
+            city.boundaries.forEach(function(b){
+              var poly=new AMap.Polygon({path:b,fillColor:fc,fillOpacity:0.5,strokeColor:"#3a6699",strokeWeight:0.5,strokeOpacity:0.4});
+              poly.setMap(m);
+              poly.on("click",function(e){
+                var info=d?(name+" - 设备:"+d.t+" 在线:"+d.on):(name+" - 暂无设备");
+                var iw=new AMap.InfoWindow({content:'<div style="padding:10px 16px;font-size:14px;color:#fff;background:rgba(0,0,0,0.9);border-radius:8px"><b>'+info+'</b></div>',offset:[0,-10]});
+                iw.open(m,e.lnglat);setTimeout(function(){iw.close();},4000);
+              });
             });
-          });
-        }
+          }
+        });
       });
     });
   });

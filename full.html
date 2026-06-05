@@ -1535,18 +1535,27 @@ function renderBsDistMap(){
   el.innerHTML="";
   var m=new AMap.Map("bsMap",{zoom:4,center:[108,35],mapStyle:"amap://styles/darkblue",resizeEnable:true});
   window._bsMapAmap=m;
-  m.plugin(["AMap.DistrictLayer","AMap.DistrictSearch"],function(){
-    new AMap.DistrictLayer.CountryLayer({zIndex:10,adcode:"100000",depth:1,SOC:"CHN",styles:{"fill":"rgba(10,30,60,0.8)","province-stroke":"#1a3355"}}).setMap(m);m.on("click",function(e){var ds2=new AMap.DistrictSearch({level:"province"});ds2.search(e.lnglat,function(s,r){if(s==="complete"&&r.districtList.length>0){var n=r.districtList[0].name;var d=pd[n];var info=d?n+" 设备:"+d.t+" 在线:"+d.on+" 在线率:"+(d.t?Math.round(d.on/d.t*100):0)+"%":n+" 暂无设备";var iw=new AMap.InfoWindow({content:"<div style=padding:8px_14px;font-size:14px;color:#fff;background:rgba(0,0,0,0.85);border-radius:8px><b>"+info+"</b></div>",offset:[0,-10]});iw.open(m,e.lnglat);setTimeout(function(){iw.close();},3000);}});});
-  });
-  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status==="在线")pd[p].on++;}});
-  var centers={"北京":[116.40,39.90],"上海":[121.47,31.23],"广东":[113.26,23.13],"浙江":[120.15,30.27],"四川":[104.06,30.57],"湖北":[114.30,30.59],"江苏":[118.79,32.06],"重庆":[106.55,29.56],"福建":[119.30,26.07],"山东":[116.98,36.67],"广西":[108.37,22.82],"陕西":[108.94,34.26],"湖南":[112.97,28.19],"河南":[113.65,34.76],"安徽":[117.28,31.86],"江西":[115.89,28.68],"河北":[114.48,38.04],"云南":[102.71,25.04],"贵州":[106.63,26.65],"辽宁":[123.43,41.80],"黑龙江":[126.53,45.80],"新疆":[87.62,43.79],"西藏":[91.13,29.65],"海南":[110.35,20.02],"天津":[117.19,39.12]};
-  Object.keys(pd).forEach(function(name){
-    var pos=centers[name];if(!pos)return;var d=pd[name];
-    var c=d.on===d.t?"#4ade80":d.on>0?"#f59e0b":"#ef4444";
-    var mk=new AMap.CircleMarker({center:pos,radius:Math.min(24,Math.max(10,d.t*6)),fillColor:c,fillOpacity:0.3,strokeColor:c,strokeWeight:2,zIndex:20});
-    mk.setMap(m);
-    mk.on("click",function(n){return function(){if(window.showDistDetail)window.showDistDetail(n);};}(name));
-    mk.setLabel({content:name+" "+d.t+"台",direction:"center",style:{color:"#fff",background:"rgba(0,0,0,0.75)",border:"1px solid "+c,padding:"3px 8px",borderRadius:"4px",fontSize:"11px"}});
+  var pd={};data.assets.forEach(function(a){var p=findProvince(a.location);if(p){if(!pd[p])pd[p]={t:0,on:0};pd[p].t++;if(a.status=="在线")pd[p].on++;}});
+  m.plugin(["AMap.DistrictSearch"],function(){
+    var ds=new AMap.DistrictSearch({level:"province",extensions:"all",subdistrict:0});
+    ds.search("中国",function(status,result){
+      if(status!=="complete"||!result.districtList[0])return;
+      result.districtList[0].districtList.forEach(function(prov){
+        var name=prov.name;var d=pd[name];
+        var fc=d?(d.on===d.t?"#0d3320":d.on>0?"#332200":"#330d0d"):"#0a1a30";
+        if(prov.boundaries){
+          prov.boundaries.forEach(function(b){
+            var poly=new AMap.Polygon({path:b,fillColor:fc,fillOpacity:0.55,strokeColor:"#3a6699",strokeWeight:1,strokeOpacity:0.6});
+            poly.setMap(m);
+            poly.on("click",function(e){
+              var info=d?(name+" - 设备:"+d.t+" 在线:"+d.on+" 在线率:"+Math.round(d.on/d.t*100)+"%"):(name+" - 暂无设备");
+              var iw=new AMap.InfoWindow({content:'<div style="padding:10px 16px;font-size:14px;color:#fff;background:rgba(0,0,0,0.9);border-radius:8px;border:1px solid '+(d?"#4ade80":"#556677")+'"><b>'+info+'</b></div>',offset:[0,-10]});
+              iw.open(m,e.lnglat);setTimeout(function(){iw.close();},4000);
+            });
+          });
+        }
+      });
+    });
   });
 }
 function _renderBsDistMap_old(){var el=document.getElementById('bsMap');if(!el)return;

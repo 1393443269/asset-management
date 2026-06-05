@@ -68,3 +68,8 @@
 .bs-rank-panel .bs-kpi{padding:8px 6px!important}
 .bs-rank-panel .bs-kpi .val{font-size:20px!important}
 .bs-rank-panel .bs-kpi .lbl{font-size:9px!important}
+/* Simple vertical stack layout */
+.bs-body-v2{gap:10px!important}
+.bs-kpi-row{grid-template-columns:repeat(4,1fr)!important;gap:12px!important}
+.bs-table-panel{background:rgba(5,20,50,0.3)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(0,150,255,0.12);border-radius:4px;padding:10px;overflow-y:auto;max-height:250px}
+.bs-bottom-row{display:none!important}

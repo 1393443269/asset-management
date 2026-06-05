@@ -391,12 +391,9 @@ if(localStorage.getItem('assethub_v3')){localStorage.removeItem('assethub_v3');c
   </div>
   <div class="bs-body-v2">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px" id="bsKpiRow"></div>
-    <div style="display:grid;grid-template-columns:1fr 280px;gap:12px;flex:1;min-height:0">
-      <div style="min-height:200px"></div>
-      <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto">
-        <div class="bs-glass"><h4 class="bs-ttl">设备列表 <span id="bsTableCount"></span></h4><table class="bs-tbl"><thead><tr><th>名称</th><th>位置</th><th>状态</th><th>在线率</th></tr></thead><tbody id="bsTableBody"></tbody></table></div>
-        <div class="bs-glass"><h4 class="bs-ttl">省份排行</h4><div id="bsProvinceList"></div></div>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 260px;gap:12px;flex:1;min-height:0">
+      <div class="bs-map-container" style="position:relative!important;inset:auto!important"><div id="bsMap"></div></div>
+      <div class="bs-glass" style="display:flex;flex-direction:column;overflow-y:auto"><h4 class="bs-ttl">省份排行</h4><div id="bsProvinceList"></div></div>
     </div>
     <div class="bs-bot-bar"><span>系统运行正常</span><span>刷新 10s</span><span>数据实时</span></div>
   </div>

@@ -79,6 +79,8 @@ function loadData() {
     } else {
       data = JSON.parse(JSON.stringify(defaultData));
       saveData();
+      // Sync from server API
+      syncFromServer();
     }
   } catch(e) {
     data = JSON.parse(JSON.stringify(defaultData));
@@ -87,6 +89,11 @@ function loadData() {
   }
 }
 
+function syncFromServer(){
+  var xhr=new XMLHttpRequest();xhr.open("GET","/api/assets",true);xhr.withCredentials=true;
+  xhr.onload=function(){if(xhr.status===200)try{var r=JSON.parse(xhr.responseText);if(r.code===0&&r.data.length>0){data.assets=r.data;saveData();}}catch(e){}}
+  xhr.send();
+}
 function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

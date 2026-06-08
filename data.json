@@ -1,6 +1,19 @@
 {
   "assets": [
     {
+      "id": "a1780883501415",
+      "sn": "TEST-002",
+      "name": "�²����豸",
+      "model": "未知",
+      "type": "通讯模块",
+      "status": "在线",
+      "location": "未知",
+      "lat": 0,
+      "lng": 0,
+      "createdAt": "2026-06-08T01:51:41.415Z",
+      "lastOnline": "2026-06-08T01:51:41.415Z"
+    },
+    {
       "id": "a1",
       "name": "EC800M-CN 通信模组",
       "model": "EC800M-CN",
@@ -8,9 +21,11 @@
       "type": "通讯模块",
       "status": "在线",
       "location": "桂林",
-      "lat": 25.2736,
-      "lng": 110.2902,
-      "createdAt": "2026-06-03"
+      "lat": 25.27,
+      "lng": 110.29,
+      "createdAt": "2026-06-03",
+      "rssi": 19,
+      "lastOnline": "2026-06-08T02:20:49.011Z"
     },
     {
       "id": "a2",

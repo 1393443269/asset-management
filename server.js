@@ -44,6 +44,97 @@ app.post('/api/customers',auth,(req,res)=>{const d=readData();const c={...req.bo
 // Device location report
 app.post('/api/report',auth,(req,res)=>{const d=readData();const {sn,lat,lng,status='在线'}=req.body;const i=d.assets.findIndex(x=>x.sn===sn);if(i>=0){d.assets[i].lat=lat;d.assets[i].lng=lng;d.assets[i].status=status;d.assets[i].lastOnline=new Date().toISOString();writeData(d);}res.json({code:0});});
 
+
+// Device auth middleware (uses X-Device-Key header or sn param)
+function deviceAuth(req,res,next){
+  const key=req.headers['x-device-key']||req.query.key||'';
+  const sn=req.headers['x-device-sn']||req.query.sn||req.body.sn||'';
+  const d=readData();
+  const device=d.assets.find(x=>x.sn===sn);
+  if(!device&&key!=='iot-gateway-key-2026')return res.status(403).json({code:403,msg:'设备未注册'});
+  req.device=device;next();
+}
+
+// ============ IoT Device APIs (无需登录) ============
+
+// Device heartbeat + location update
+app.post('/api/device/heartbeat',deviceAuth,(req,res)=>{
+  const d=readData();
+  const {sn,lat,lng,rssi,battery,speed,satellites}=req.body;
+  const i=d.assets.findIndex(x=>x.sn===sn);
+  if(i>=0){
+    d.assets[i].lat=lat||d.assets[i].lat;
+    d.assets[i].lng=lng||d.assets[i].lng;
+    d.assets[i].rssi=rssi;
+    d.assets[i].battery=battery;
+    d.assets[i].speed=speed;
+    d.assets[i].satellites=satellites;
+    d.assets[i].status='在线';
+    d.assets[i].lastOnline=new Date().toISOString();
+    writeData(d);
+    // Check for pending commands
+    const cmds=d.pendingCommands?d.pendingCommands.filter(x=>x.sn===sn):[];
+    res.json({code:0,ts:Date.now(),cmds:cmds||[]});
+  }else res.json({code:1,msg:'设备不存在'});
+});
+
+// Device telemetry upload (full data package)
+app.post('/api/device/telemetry',deviceAuth,(req,res)=>{
+  const d=readData();
+  const {sn,...telemetry}=req.body;
+  const i=d.assets.findIndex(x=>x.sn===sn);
+  if(i>=0){
+    d.assets[i].telemetry={...telemetry,ts:Date.now()};
+    d.assets[i].status='在线';
+    d.assets[i].lastOnline=new Date().toISOString();
+    writeData(d);
+    res.json({code:0});
+  }else res.json({code:1,msg:'设备不存在'});
+});
+
+// Device registration (auto-register on first connect)
+app.post('/api/device/register',(req,res)=>{
+  const d=readData();
+  const {sn,name,model,type,lat,lng}=req.body;
+  if(!sn)return res.json({code:1,msg:'缺少设备序列号'});
+  const exists=d.assets.find(x=>x.sn===sn);
+  if(exists)return res.json({code:0,msg:'设备已注册',id:exists.id});
+  const device={
+    id:'a'+Date.now(),sn,name:name||('设备-'+sn.slice(-6)),
+    model:model||'未知',type:type||'通讯模块',
+    status:'在线',location:'未知',lat:lat||0,lng:lng||0,
+    createdAt:new Date().toISOString(),lastOnline:new Date().toISOString()
+  };
+  d.assets.unshift(device);
+  writeData(d);
+  res.json({code:0,msg:'注册成功',id:device.id});
+});
+
+// Device command dispatch (web -> device)
+app.post('/api/device/command',auth,(req,res)=>{
+  const d=readData();
+  const {sn,cmd,params}=req.body;
+  if(!d.pendingCommands)d.pendingCommands=[];
+  d.pendingCommands.push({sn,cmd,params:params||{},ts:Date.now(),status:'pending'});
+  if(d.pendingCommands.length>1000)d.pendingCommands=d.pendingCommands.slice(-500);
+  writeData(d);
+  res.json({code:0,msg:'指令已下发,设备下次心跳时获取'});
+});
+
+// Get command status
+app.get('/api/device/command/:sn',deviceAuth,(req,res)=>{
+  const d=readData();
+  const cmds=(d.pendingCommands||[]).filter(x=>x.sn===req.params.sn);
+  res.json({code:0,cmds});
+});
+
+// MQTT broker config for devices
+app.get('/api/device/config',deviceAuth,(req,res)=>{
+  res.json({code:0,broker:'broker.emqx.io',port:1883,wsPort:8084,
+    topicStatus:'devices/{sn}/status',topicTelemetry:'devices/{sn}/telemetry',
+    topicCmd:'devices/{sn}/cmd',keepAlive:60,qos:1});
+});
+
 // Static files
 app.use(express.static(__dirname));
 

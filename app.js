@@ -91,7 +91,19 @@ function loadData() {
 
 function syncFromServer(){
   var xhr=new XMLHttpRequest();xhr.open("GET","/api/assets",true);xhr.withCredentials=true;
-  xhr.onload=function(){if(xhr.status===200)try{var r=JSON.parse(xhr.responseText);if(r.code===0&&r.data.length>0){data.assets=r.data;saveData();}}catch(e){}}
+  xhr.onload=function(){
+    if(xhr.status===200)try{var r=JSON.parse(xhr.responseText);if(r.code===0&&r.data.length>0){
+      data.assets=r.data;saveData();
+      console.log("Synced "+r.data.length+" devices from server");
+      // Re-render current page after data sync
+      if(currentPage==="dashboard")renderDashboard();
+      if(currentPage==="bigscreen"){renderDistBigScreen();}
+      if(currentPage==="distribution")renderDistribution();
+      if(currentPage==="monitor")renderMonitor();
+      if(currentPage==="assets")renderAssetTable();
+    }}catch(e){console.log("Sync error:",e);}
+  };
+  xhr.onerror=function(){console.log("Server API not available, using local data");};
   xhr.send();
 }
 function saveData() {

@@ -1,153 +1,95 @@
 #!/usr/bin/env python3
-"""
-EC800M Device Bridge - COM3 Serial <-> Server API
-=================================================
-Reads device data from COM3, posts to server.
-Polls for remote commands, executes via AT.
-"""
-import serial, time, json, threading, queue, requests
-import logging
+"""EC800M Bridge - COM3 AT + COM6 GPS -> Server API"""
+import serial, time, threading, requests, logging
 
-# Config
-COM_PORT = "COM3"
-BAUD = 115200
-SN = "869598078703629"
-SERVER = "http://localhost:8090"
-INTERVAL = 10  # seconds
+COM_PORT, BAUD, SN = "COM3", 115200, "869598078703629"
+SERVER, INTERVAL = "http://localhost:8090", 10
 
-log = logging.getLogger('bridge')
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+log = logging.getLogger('bridge')
 
 class DeviceBridge:
     def __init__(self):
-        self.ser = None
+        self.ser, self.nmea = None, None
+        self.lat, self.lng, self.sats = 0.0, 0.0, 0
         self.running = True
-        self.cmd_queue = queue.Queue()
         self.session = requests.Session()
-        # Login first
         try:
             r = self.session.post(f"{SERVER}/api/login", json={"username":"admin","password":"admin123"})
-            log.info(f"Server login: {r.json().get('msg','unknown')}")
-        except Exception as e:
-            log.warning(f"Server login failed (will use device endpoints): {e}")
+            log.info(f"Login: {r.json().get('msg','?')}")
+        except: log.warning("Server unavailable")
 
     def open_serial(self):
         try:
             self.ser = serial.Serial(COM_PORT, BAUD, timeout=3)
-            log.info(f"COM3 opened @ {BAUD}")
-            return True
-        except Exception as e:
-            log.error(f"COM3 open failed: {e}")
-            return False
+            log.info("COM3 opened"); return True
+        except Exception as e: log.error(f"COM3: {e}"); return False
 
-    def at_cmd(self, cmd, timeout=5):
-        """Send AT command and return response"""
-        if not self.ser or not self.ser.is_open:
-            return None
+    def open_nmea(self):
         try:
-            self.ser.reset_input_buffer()
-            self.ser.write((cmd + '\r\n').encode())
-            time.sleep(0.4)
-            lines = []
-            t0 = time.time()
-            while time.time() - t0 < timeout:
+            self.nmea = serial.Serial('COM6', 115200, timeout=1)
+            def read():
+                while self.running and self.nmea:
+                    try:
+                        if self.nmea.in_waiting:
+                            line = self.nmea.readline().decode('utf-8', errors='replace').strip()
+                            if line.startswith('$GNRMC') or line.startswith('$GPRMC'):
+                                p = line.split(',')
+                                if len(p) >= 6 and p[2] == 'A':
+                                    lat_d = float(p[3][:2]) + float(p[3][2:]) / 60
+                                    if p[4] == 'S': lat_d = -lat_d
+                                    lng_d = float(p[5][:3]) + float(p[5][3:]) / 60
+                                    if p[6] == 'W': lng_d = -lng_d
+                                    self.lat, self.lng = round(lat_d, 6), round(lng_d, 6)
+                            elif line.startswith('$GNGGA') or line.startswith('$GPGGA'):
+                                p = line.split(',')
+                                if len(p) > 7 and p[6] != '0': self.sats = int(p[7])
+                        else: time.sleep(0.1)
+                    except: time.sleep(0.5)
+            threading.Thread(target=read, daemon=True).start()
+            log.info("COM6 GPS opened")
+        except Exception as e: log.warning(f"COM6: {e}")
+
+    def at(self, cmd, t=5):
+        if not self.ser or not self.ser.is_open: return None
+        try:
+            self.ser.reset_input_buffer(); self.ser.write((cmd+'\r\n').encode()); time.sleep(0.4)
+            lines, t0 = [], time.time()
+            while time.time()-t0 < t:
                 if self.ser.in_waiting:
                     line = self.ser.readline().decode('utf-8', errors='replace').strip()
                     if line: lines.append(line)
-                if any('OK' in l or 'ERROR' in l for l in lines):
-                    break
+                if any('OK' in l or 'ERROR' in l for l in lines): break
                 time.sleep(0.1)
             return '\n'.join(lines)
-        except:
-            return None
+        except: return None
 
-    def read_device_data(self):
-        """Read current device state from COM3"""
-        data = {'sn': SN, 'ts': int(time.time())}
-        # Signal strength
-        csq = self.at_cmd('AT+CSQ')
+    def read(self):
+        d = {'sn': SN, 'ts': int(time.time())}
+        if self.nmea and self.lat != 0: d['lat'], d['lng'], d['satellites'] = self.lat, self.lng, self.sats
+        csq = self.at('AT+CSQ')
         if csq and '+CSQ:' in csq:
-            try: data['rssi'] = int(csq.split(':')[1].split(',')[0].strip()); 
-            except: data['rssi'] = -99
-        # Network registration
-        creg = self.at_cmd('AT+CREG?')
-        data['registered'] = '+CREG: 0,1' in creg if creg else False
-        # Operator
-        cops = self.at_cmd('AT+COPS?')
-        if cops and '+COPS:' in cops:
-            try: data['operator'] = cops.split('"')[1]
-            except: pass
-        return data
+            try: d['rssi'] = int(csq.split(':')[1].split(',')[0].strip())
+            except: d['rssi'] = -99
+        return d
 
-    def post_heartbeat(self, data):
-        """Send heartbeat to server"""
+    def beat(self, d):
         try:
-            r = requests.post(f"{SERVER}/api/device/heartbeat", json=data, timeout=5)
-            resp = r.json()
-            if resp.get('code') == 0:
-                log.info(f"Heartbeat OK | RSSI:{data.get('rssi','?')} | {data.get('operator','?')}")
-                # Check for commands
-                for cmd in resp.get('cmds', []):
-                    self.execute_command(cmd)
-            else:
-                log.warning(f"Heartbeat failed: {resp.get('msg')}")
-        except Exception as e:
-            log.error(f"Heartbeat error: {e}")
-
-    def post_telemetry(self, data):
-        """Post full telemetry to server"""
-        try:
-            r = requests.post(f"{SERVER}/api/device/telemetry", json=data, timeout=5)
+            r = requests.post(f"{SERVER}/api/device/heartbeat", json=d, timeout=5)
             if r.json().get('code') == 0:
-                log.info(f"Telemetry OK")
-        except Exception as e:
-            log.error(f"Telemetry error: {e}")
-
-    def execute_command(self, cmd_obj):
-        """Execute a command from server on the device"""
-        cmd = cmd_obj.get('cmd', '')
-        params = cmd_obj.get('params', {})
-        log.info(f"Executing command: {cmd}")
-        result = ''
-        if cmd == 'AT': result = self.at_cmd('AT')
-        elif cmd == 'CSQ': result = self.at_cmd('AT+CSQ')
-        elif cmd == 'LOCATE': result = self.at_cmd('AT+QGNSS="loc"')
-        elif cmd == 'REBOOT': result = self.at_cmd('AT+CFUN=1,1')
-        elif cmd == 'STATUS': result = self.at_cmd('AT+CPAS')
-        elif cmd == 'INFO': result = self.at_cmd('ATI')
-        else: result = f'Unknown command: {cmd}'
-        log.info(f"Command result: {result[:100] if result else 'N/A'}")
-        return result
-
-    def poll_commands(self):
-        """Check for pending commands from server"""
-        try:
-            r = requests.get(f"{SERVER}/api/device/command/{SN}", timeout=5)
-            cmds = r.json().get('cmds', [])
-            for cmd in cmds:
-                self.execute_command(cmd)
+                gps = f"GPS:{d.get('lat',0):.5f},{d.get('lng',0):.5f}" if d.get('lat') else "GPS:waiting"
+                log.info(f"OK RSSI:{d.get('rssi','?')} {gps} sats:{d.get('satellites',0)}")
         except: pass
 
     def run(self):
-        if not self.open_serial():
-            log.warning("COM3 not available - running in network-only mode")
-        log.info(f"Device Bridge started | SN:{SN} | Server:{SERVER}")
+        self.open_serial(); self.open_nmea()
+        log.info(f"Bridge started SN:{SN}")
         while self.running:
-            try:
-                data = self.read_device_data()
-                self.post_heartbeat(data)
-                if self.ser:
-                    self.poll_commands()
-                time.sleep(INTERVAL)
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                log.error(f"Loop error: {e}")
-                time.sleep(5)
-        if self.ser:
-            self.ser.close()
-        log.info("Bridge stopped")
+            try: self.beat(self.read()); time.sleep(INTERVAL)
+            except KeyboardInterrupt: break
+            except Exception as e: log.error(f"{e}"); time.sleep(5)
+        if self.ser: self.ser.close()
+        if self.nmea: self.nmea.close()
+        log.info("Stopped")
 
-if __name__ == '__main__':
-    bridge = DeviceBridge()
-    bridge.run()
+DeviceBridge().run()
